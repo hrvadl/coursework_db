@@ -1,4 +1,4 @@
-package server
+package middleware
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 
 type HTTPMiddleware func(http.Handler) http.Handler
 
-func NewCorsMiddleware() HTTPMiddleware {
+func NewCors() HTTPMiddleware {
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
