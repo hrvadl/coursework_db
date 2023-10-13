@@ -1,15 +1,10 @@
 package models
 
 type Deal struct {
-	ID uint `gorm:"primaryKey,autoIncrement"`
-
-	OwnerID uint
-	Owner   User
-
+	ID         uint `gorm:"primaryKey,autoIncrement"`
+	OwnerID    uint
 	SecurityID uint
-	Security   Security
-
-	Amount uint
-	Price  float64
-	Active bool
+	Amount     uint
+	Price      float64
+	Active     bool
 }

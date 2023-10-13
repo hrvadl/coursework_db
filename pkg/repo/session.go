@@ -10,8 +10,8 @@ import (
 )
 
 type Session interface {
-	Create(id uint) (*models.Session, error)
-	GetByUserID(id uint) (*models.Session, error)
+	Create(u *models.User) (*models.Session, error)
+	GetByID(id uint) (*models.Session, error)
 }
 
 func NewSession(db *gorm.DB) Session {
@@ -24,13 +24,14 @@ type session struct {
 	db *gorm.DB
 }
 
-func (s *session) Create(id uint) (*models.Session, error) {
+func (s *session) Create(u *models.User) (*models.Session, error) {
 	session := &models.Session{
-		UserID:     id,
+		UserID:     u.ID,
+		UserRole:   u.Role,
 		ValidUntil: time.Now().Add(time.Hour * 24),
 	}
 
-	_ = s.DeleteByUserID(id)
+	_ = s.DeleteByUserID(u.ID)
 	res := s.db.Create(session)
 
 	if res.Error != nil {
@@ -40,11 +41,10 @@ func (s *session) Create(id uint) (*models.Session, error) {
 	return session, nil
 }
 
-func (s *session) GetByUserID(id uint) (*models.Session, error) {
+func (s *session) GetByID(id uint) (*models.Session, error) {
 	var session models.Session
-	err := s.db.Where(&models.Session{UserID: id}, id).First(&session).Error
 
-	if err != nil {
+	if err := s.db.Find(id).Error; err != nil {
 		return nil, fmt.Errorf("cannot create new session: %v", err)
 	}
 

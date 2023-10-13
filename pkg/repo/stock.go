@@ -5,22 +5,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type StockRepository interface {
+type Stock interface {
 	Get() ([]models.User, error)
 	GetByID(id int) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	Create(u *models.User) (*models.User, error)
 }
 
-type stockRepository struct {
+type stock struct {
 	db *gorm.DB
 }
 
-func NewStock(db *gorm.DB) StockRepository {
-	return &stockRepository{db}
+func NewStock(db *gorm.DB) Stock {
+	return &stock{db}
 }
 
-func (r *stockRepository) Get() ([]models.User, error) {
+func (r *stock) Get() ([]models.User, error) {
 	var users []models.User
 
 	if tx := r.db.Where(&models.User{Role: models.StockRole}).Find(&users); tx.Error != nil {
@@ -30,7 +30,7 @@ func (r *stockRepository) Get() ([]models.User, error) {
 	return users, nil
 }
 
-func (r *stockRepository) GetByID(id int) (*models.User, error) {
+func (r *stock) GetByID(id int) (*models.User, error) {
 	var user models.User
 	res := r.db.Where(&models.User{ID: uint(id), Role: models.StockRole}).First(&user)
 
@@ -41,7 +41,7 @@ func (r *stockRepository) GetByID(id int) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *stockRepository) GetByEmail(email string) (*models.User, error) {
+func (r *stock) GetByEmail(email string) (*models.User, error) {
 	var user models.User
 	res := r.db.Where(&models.User{Email: email, Role: models.StockRole}).First(&user)
 
@@ -52,7 +52,7 @@ func (r *stockRepository) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *stockRepository) Create(u *models.User) (*models.User, error) {
+func (r *stock) Create(u *models.User) (*models.User, error) {
 	if res := r.db.Create(&u); res.Error != nil {
 		return nil, res.Error
 	}

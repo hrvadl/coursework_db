@@ -1,16 +1,13 @@
 package models
 
 type Transaction struct {
-	ID uint `gorm:"primaryKey,autoIncrement"`
-
-	BuyerID uint
+	ID      uint `gorm:"primaryKey,autoIncrement"`
 	Buyer   User
+	BuyerID uint
 
-	SellerID uint
 	Seller   User
+	SellerID uint
 
 	SubjectID uint
-	Subject   Deal
-
-	Amount uint
+	Amount    uint
 }

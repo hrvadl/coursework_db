@@ -11,11 +11,11 @@ type Emitent interface {
 }
 
 type emitent struct {
-	repo   repo.EmitentRepository
+	repo   repo.Emitent
 	crypto Cryptor
 }
 
-func NewEmitentService(repo repo.EmitentRepository, crypto Cryptor) Emitent {
+func NewEmitent(repo repo.Emitent, crypto Cryptor) Emitent {
 	return &emitent{
 		repo:   repo,
 		crypto: crypto,

@@ -7,7 +7,9 @@ import (
 )
 
 func New(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(mysql.Open(dsn))
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 
 	if err != nil {
 		return nil, err

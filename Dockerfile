@@ -8,4 +8,5 @@ RUN GOOS=linux CGO_ENABLED=0 go build -o /app/stock ./cmd
 FROM alpine:latest as final
 WORKDIR /app
 COPY --from=builder /app/stock .
+COPY --from=builder /app/static /static
 CMD ["./stock"]

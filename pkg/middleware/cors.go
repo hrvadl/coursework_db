@@ -8,7 +8,7 @@ import (
 
 type HTTPMiddleware func(http.Handler) http.Handler
 
-func NewCors() HTTPMiddleware {
+func WithCors() HTTPMiddleware {
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

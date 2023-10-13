@@ -1,15 +1,17 @@
 package services
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/hrvadl/coursework_db/pkg/models"
 	"github.com/hrvadl/coursework_db/pkg/repo"
 )
 
 type UserRepo interface {
-	repo.EmitentRepository
-	repo.StockRepository
+	repo.Emitent
+	repo.Stock
 }
 
 type Auth interface {
@@ -18,15 +20,15 @@ type Auth interface {
 }
 
 type auth struct {
-	stock   repo.StockRepository
-	emitent repo.EmitentRepository
+	stock   repo.Stock
+	emitent repo.Emitent
 	crypto  Cryptor
 	session repo.Session
 }
 
 func NewAuth(
-	s repo.StockRepository,
-	e repo.EmitentRepository,
+	s repo.Stock,
+	e repo.Emitent,
 	se repo.Session,
 	c Cryptor,
 ) Auth {
@@ -96,7 +98,7 @@ func (a *auth) SignIn(u *models.User) (*models.User, error) {
 		return nil, fmt.Errorf("password does not match")
 	}
 
-	if _, err := a.session.Create(u.ID); err != nil {
+	if _, err := a.session.Create(u); err != nil {
 		return nil, err
 	}
 
@@ -106,26 +108,39 @@ func (a *auth) SignIn(u *models.User) (*models.User, error) {
 func (a *auth) getUser(email string) (*models.User, error) {
 	emitentCh := make(chan *models.User, 1)
 	stockCh := make(chan *models.User, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
 	go func() {
 		if e, _ := a.emitent.GetByEmail(email); e != nil {
 			emitentCh <- e
+			return
 		}
+		emitentCh <- nil
 	}()
 
 	go func() {
 		if s, _ := a.stock.GetByEmail(email); s != nil {
 			stockCh <- s
+			return
 		}
+		stockCh <- nil
 	}()
 
-	// TODO: will this stuck?
-	select {
-	case u := <-stockCh:
-		return u, nil
-	case u := <-emitentCh:
-		return u, nil
-	default:
-		return nil, fmt.Errorf("user with email %v does not exist", email)
+	for {
+		select {
+		case u := <-stockCh:
+			if u != nil {
+				return u, nil
+			}
+
+		case u := <-emitentCh:
+			if u != nil {
+				return u, nil
+			}
+
+		case <-ctx.Done():
+			return nil, fmt.Errorf("request timed out")
+		}
 	}
 }

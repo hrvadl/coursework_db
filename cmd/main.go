@@ -9,6 +9,7 @@ import (
 	"github.com/hrvadl/coursework_db/pkg/repo"
 	"github.com/hrvadl/coursework_db/pkg/server"
 	"github.com/hrvadl/coursework_db/pkg/services"
+	"github.com/hrvadl/coursework_db/pkg/templates"
 )
 
 func main() {
@@ -18,6 +19,7 @@ func main() {
 	logger.Info("Initializing the helper services...")
 	cfg := config.New(logger).ParseFromEnv()
 	cryptor := services.NewCryptor()
+	tr := templates.NewResolver(cfg)
 
 	logger.Info("Initializing the DB...")
 	db := db.Must(db.New(cfg.DSN))
@@ -31,6 +33,7 @@ func main() {
 	logger.Info("Initializing the core services...")
 	stockService := services.NewStock(stockRepo, cryptor)
 	dealService := services.NewDeal(dealRepo)
+	emitentService := services.NewEmitent(emitentRepo, cryptor)
 	authService := services.NewAuth(
 		stockRepo,
 		emitentRepo,
@@ -38,11 +41,18 @@ func main() {
 		cryptor,
 	)
 
+	authController := controllers.NewAuth(authService, tr)
+	profileController := controllers.NewProfile(emitentService, stockService, dealService, tr)
+	dealController := controllers.NewDeal(dealService, tr)
+
 	logger.Infof("Server is starting on port %v", cfg.ServerPort)
 	srv := server.NewHTTP(&server.HTTPServerArgs{
-		Logger: logger,
+		Session: sessionRepo,
+		Logger:  logger,
 		Controllers: &server.Controllers{
-			Auth: controllers.NewUser(authService),
+			Auth:    authController,
+			Profile: profileController,
+			Deal:    dealController,
 		},
 	})
 	logger.Fatal(srv.ListenAndServe(cfg.ServerPort))

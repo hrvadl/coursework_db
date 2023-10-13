@@ -3,6 +3,8 @@ package models
 import "time"
 
 type Session struct {
-	UserID     uint      `gorm:"primaryKey"`
-	ValidUntil time.Time `gorm:"primaryKey"`
+	ID         uint   `gorm:"primaryKey"`
+	UserID     uint   `gorm:"not null,unique"`
+	UserRole   string `gorm:"not null"`
+	ValidUntil time.Time
 }

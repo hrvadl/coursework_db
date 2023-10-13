@@ -11,11 +11,11 @@ type Stock interface {
 }
 
 type stock struct {
-	repo   repo.StockRepository
+	repo   repo.Stock
 	crypto Cryptor
 }
 
-func NewStock(repo repo.StockRepository, crypto Cryptor) Stock {
+func NewStock(repo repo.Stock, crypto Cryptor) Stock {
 	return &stock{
 		repo:   repo,
 		crypto: crypto,

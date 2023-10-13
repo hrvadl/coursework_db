@@ -8,6 +8,8 @@ import (
 type Deal interface {
 	GetByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
+	Patch(deal *models.Deal) (*models.Deal, error)
+	Delete(id int) error
 }
 
 func NewDeal(db *gorm.DB) Deal {
@@ -36,4 +38,17 @@ func (d *deal) Get() ([]models.Deal, error) {
 	}
 
 	return deals, nil
+}
+
+func (d *deal) Patch(deal *models.Deal) (*models.Deal, error) {
+	if err := d.db.Model(deal).Updates(deal).Error; err != nil {
+		return nil, err
+	}
+
+	return deal, nil
+}
+
+func (d *deal) Delete(id int) error {
+	_, err := d.Patch(&models.Deal{ID: uint(id), Active: false})
+	return err
 }
