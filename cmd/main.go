@@ -29,11 +29,13 @@ func main() {
 	emitentRepo := repo.NewEmitent(db)
 	sessionRepo := repo.NewSession(db)
 	dealRepo := repo.NewDeal(db)
+	securityRepo := repo.NewSecurity(db)
 
 	logger.Info("Initializing the core services...")
 	stockService := services.NewStock(stockRepo, cryptor)
 	dealService := services.NewDeal(dealRepo)
 	emitentService := services.NewEmitent(emitentRepo, cryptor)
+	securityService := services.NewSecurity(securityRepo)
 	authService := services.NewAuth(
 		stockRepo,
 		emitentRepo,
@@ -43,7 +45,7 @@ func main() {
 
 	authController := controllers.NewAuth(authService, tr)
 	profileController := controllers.NewProfile(emitentService, stockService, dealService, tr)
-	dealController := controllers.NewDeal(dealService, tr)
+	dealController := controllers.NewDeal(dealService, securityService, tr)
 
 	logger.Infof("Server is starting on port %v", cfg.ServerPort)
 	srv := server.NewHTTP(&server.HTTPServerArgs{

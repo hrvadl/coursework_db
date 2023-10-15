@@ -14,12 +14,24 @@
       integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
       crossorigin="anonymous"
     ></script>
+    <script>
+      const openDialog = () => {
+        const dialog = document.getElementById("create-dialog");
+        dialog.showModal();
+      };
+
+      const closeDialog = () => {
+        const dialog = document.getElementById("create-dialog");
+        dialog.close();
+      };
+    </script>
   </head>
   <body class="flex flex-col h-screen bg-gray-100">
     {{ template "header" }}
     <main class="flex-grow flex-shrink-0 basis-full container mx-auto py-5">
-      <section class="flex justify-between items-center w-full">
-        <h2 class="text-2xl font-semibold mb-6">Active deals:</h2>
+      <div id="toast" class="fixed"></div>
+      <section class="flex justify-between mb-6 items-center w-full">
+        <h2 class="text-2xl font-semibold">Active deals:</h2>
         <button
           class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
           onclick="openDialog()"
@@ -27,17 +39,21 @@
           Create +
         </button>
       </section>
-
       <dialog id="create-dialog" class="p-6">
-        <form>
+        <form
+          hx-post="/v1/deals"
+          hx-target="#toast"
+          hx-trigger="submit"
+          hx-swap="outerHTML"
+        >
           <label
-            for="stockPrice"
+            for="securityID"
             class="block text-gray-700 text-sm font-bold mb-2"
             >Choose Security</label
           >
           <select
-            id="stockPrice"
-            name="stockPrice"
+            id="securityID"
+            name="securityID"
             class="w-full p-2 border border-gray-300 rounded mb-4"
           >
             {{ range .Securities }}
@@ -51,6 +67,15 @@
             type="number"
             id="price"
             name="price"
+            class="w-full mb-2 p-2 border border-gray-300 rounded"
+          />
+          <label for="amount" class="block text-gray-700 text-sm font-bold mb-2"
+            >Amount</label
+          >
+          <input
+            type="number"
+            id="amount"
+            name="amount"
             class="w-full p-2 border border-gray-300 rounded"
           />
           <div class="flex justify-between mt-4">
@@ -63,6 +88,7 @@
               Cancel
             </button>
             <button
+              onclick="closeDialog()"
               type="submit"
               class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
             >
@@ -71,27 +97,22 @@
           </div>
         </form>
       </dialog>
-
       <section>
         {{ if not .Deals }}
         <span class="mt-4 text-xl"
           >Unfortunately, there's nothing to show... {{ if eq .Role "stock" }}
           But you always can create a new one! {{ end }}
         </span>
-        {{ end }} {{ range .Deals }} {{ template "deal-item" . }} {{ end }}
+        {{ end }}
+        <div
+          hx-get="/v1/deals"
+          hx-swap="innerHTML"
+          hx-trigger="get-deals-event from:body"
+        >
+          {{ template "deal-list" . }}
+        </div>
       </section>
     </main>
     {{ template "footer" }}
-    <script>
-      const openDialog = () => {
-        const dialog = document.getElementById("create-dialog");
-        dialog.showModal();
-      };
-
-      const closeDialog = () => {
-        const dialog = document.getElementById("create-dialog");
-        dialog.close();
-      };
-    </script>
   </body>
 </html>

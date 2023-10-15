@@ -16,3 +16,16 @@ type DealsArgs struct {
 	Deals      []models.Deal
 	Role       string
 }
+
+type DealArgs struct {
+	Deal *models.Deal
+}
+
+type ToastArgs struct {
+	Message string
+	Error   string
+}
+
+type DealListArgs struct {
+	Deals []models.Deal
+}

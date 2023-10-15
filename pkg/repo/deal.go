@@ -8,6 +8,7 @@ import (
 type Deal interface {
 	GetByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
+	Create(deal *models.Deal) (*models.Deal, error)
 	Patch(deal *models.Deal) (*models.Deal, error)
 	Delete(id int) error
 }
@@ -22,8 +23,9 @@ type deal struct {
 
 func (d *deal) GetByID(id int) (*models.Deal, error) {
 	var deal models.Deal
+	err := d.db.Model(&models.Deal{}).Preload("Owner").Preload("Security").First(&deal, id).Error
 
-	if err := d.db.Find(&deal, id).Error; err != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -32,8 +34,9 @@ func (d *deal) GetByID(id int) (*models.Deal, error) {
 
 func (d *deal) Get() ([]models.Deal, error) {
 	var deals []models.Deal
+	res := d.db.Model(&models.Deal{}).Preload("Security").Find(&deals)
 
-	if err := d.db.Find(&deals).Error; err != nil {
+	if err := res.Error; err != nil {
 		return nil, err
 	}
 
@@ -42,6 +45,14 @@ func (d *deal) Get() ([]models.Deal, error) {
 
 func (d *deal) Patch(deal *models.Deal) (*models.Deal, error) {
 	if err := d.db.Model(deal).Updates(deal).Error; err != nil {
+		return nil, err
+	}
+
+	return deal, nil
+}
+
+func (d *deal) Create(deal *models.Deal) (*models.Deal, error) {
+	if err := d.db.Create(deal).Error; err != nil {
 		return nil, err
 	}
 

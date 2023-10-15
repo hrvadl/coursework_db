@@ -1,0 +1,21 @@
+{{ define "toast" }}
+<div
+  id="toast"
+  class="fixed top-4 left-1/2 transform -translate-x-1/2 {{ if .Error }} bg-red-500 {{ else }} bg-blue-500 {{ end }} text-white rounded shadow-md"
+>
+  <div class="relative w-full h-full px-5 py-4">
+    <span>
+      {{ if .Error }} {{ .Error }} {{ else }} {{ .Message }} {{ end }}</span
+    >
+  </div>
+  <script type="text/javascript">
+    const close = () => {
+      const toast = document.getElementById("toast");
+      toast.classList.add("hidden");
+    };
+
+    setTimeout(close, 3000);
+  </script>
+</div>
+
+{{ end }}

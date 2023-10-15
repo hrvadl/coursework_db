@@ -52,6 +52,7 @@ func (s *Server) setupRoutes() http.Handler {
 
 	r.With(middleware.RedirectUnauthorized(s.Session)).Group(func(r chi.Router) {
 		r.Get("/", s.Deal.ServeDealsPage)
+		r.Get("/deals/{id}", s.Deal.ServeDealPage)
 		r.Get("/profile", s.Profile.ServeProfilePage)
 	})
 
@@ -76,16 +77,13 @@ func (s *Server) setupRoutes() http.Handler {
 			})
 		})
 
-		r.Route("/securities", func(r chi.Router) {
-			r.Use(middleware.WithAuth(s.Session))
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {})
-		})
-
 		r.Route("/deals", func(r chi.Router) {
-			r.Get("/:ownerID", func(w http.ResponseWriter, r *http.Request) {})
-			r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
-			r.Patch("/:id", func(w http.ResponseWriter, r *http.Request) {})
-			r.Delete("/:id", func(w http.ResponseWriter, r *http.Request) {})
+			r.Get("/", s.Deal.HandleGet)
+			r.With(middleware.WithAuth(s.Session)).Group(func(r chi.Router) {
+				r.Post("/", s.Deal.HandleCreate)
+				r.Patch("/:id", func(w http.ResponseWriter, r *http.Request) {})
+				r.Delete("/:id", func(w http.ResponseWriter, r *http.Request) {})
+			})
 		})
 
 		r.Route("/transactions", func(r chi.Router) {

@@ -1,0 +1,19 @@
+{{ define "deal-list" }}
+<ul class="flex flex-col gap-4">
+  {{ range .Deals }}
+  <li class="w-full p-2 hover:bg-gray-200 duration-150 cursor-pointer w-full">
+    <a href="/deals/{{ .ID }}" class="flex justify-between gap-2">
+      <p class="flex-grow-0 flex-shrink-0 w-36 truncate text-base">
+        Security {{ .Security.Name }}
+      </p>
+      <p class="flex-grow-0 flex-shrink-0 truncate w-36 text-base">
+        Price: {{ .Price }}$
+      </p>
+      <p class="flex-grow-0 flex-shrink-0 truncate w-28 text-base">
+        Amount: {{ .Amount }}
+      </p>
+    </a>
+  </li>
+  {{ end }}
+</ul>
+{{ end }}
