@@ -15,16 +15,22 @@
       crossorigin="anonymous"
     ></script>
   </head>
-  <body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded shadow-md w-96">
-      <h2 class="text-2xl font-semibold mb-6">Sign In</h2>
+  <body class="bg-gray-100 flex flex-col h-screen">
+    {{ template "login-header" }}
+    <main
+      class="flex items-center justify-center flex-grow flex-shrink-0 basis-full container"
+    >
+      <div class="bg-white p-8 rounded shadow-md w-96">
+        <h2 class="text-2xl font-semibold mb-6">Sign In</h2>
 
-      {{ template "sign-in-form" .Error }}
+        {{ template "sign-in-form" .Error }}
 
-      <p class="mt-4 text-sm text-gray-600">
-        Don't have an account?
-        <a href="/auth/sign-up" class="text-blue-500">Sign up here.</a>
-      </p>
-    </div>
+        <p class="mt-4 text-sm text-gray-600">
+          Don't have an account?
+          <a href="/auth/sign-up" class="text-blue-500">Sign up here.</a>
+        </p>
+      </div>
+    </main>
+    {{ template "footer" }}
   </body>
 </html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deals</title>
+    <!-- Include the Tailwind CSS stylesheet -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://unpkg.com/htmx.org@1.9.6"
+      integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body class="flex flex-col h-screen bg-gray-100">
+    {{ template "header" }}
+    <main class="flex-grow flex-shrink-0 basis-full container mx-auto py-5">
+      <section class="flex justify-between items-center w-full">
+        <h2 class="text-2xl font-semibold mb-6">Active deals:</h2>
+        <button
+          class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          onclick="openDialog()"
+        >
+          Create +
+        </button>
+      </section>
+
+      <dialog id="create-dialog" class="p-6">
+        <form>
+          <label
+            for="stockPrice"
+            class="block text-gray-700 text-sm font-bold mb-2"
+            >Choose Security</label
+          >
+          <select
+            id="stockPrice"
+            name="stockPrice"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+          >
+            {{ range .Securities }}
+            <option value="{{ .ID }}">{{ .Name }}</option>
+            {{ end }}
+          </select>
+          <label for="price" class="block text-gray-700 text-sm font-bold mb-2"
+            >Price</label
+          >
+          <input
+            type="number"
+            id="price"
+            name="price"
+            class="w-full p-2 border border-gray-300 rounded"
+          />
+          <div class="flex justify-between mt-4">
+            <button
+              formmethod="dialog"
+              onclick="closeDialog()"
+              type="submit"
+              class="bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+            >
+              Create
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <section>
+        {{ if not .Deals }}
+        <span class="mt-4 text-xl"
+          >Unfortunately, there's nothing to show... {{ if eq .Role "stock" }}
+          But you always can create a new one! {{ end }}
+        </span>
+        {{ end }} {{ range .Deals }} {{ template "deal-item" . }} {{ end }}
+      </section>
+    </main>
+    {{ template "footer" }}
+    <script>
+      const openDialog = () => {
+        const dialog = document.getElementById("create-dialog");
+        dialog.showModal();
+      };
+
+      const closeDialog = () => {
+        const dialog = document.getElementById("create-dialog");
+        dialog.close();
+      };
+    </script>
+  </body>
+</html>

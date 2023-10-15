@@ -128,3 +128,11 @@ func GetUserCtx(ctx context.Context) (*UserCtx, error) {
 
 	return &userCtx, nil
 }
+
+func Must(ctx *UserCtx, err error) *UserCtx {
+	if err != nil {
+		panic(err)
+	}
+
+	return ctx
+}
