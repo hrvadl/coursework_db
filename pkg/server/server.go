@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/hrvadl/coursework_db/pkg/controllers"
@@ -51,7 +50,7 @@ func (s *Server) setupRoutes() http.Handler {
 		r.Get("/sign-in", s.Auth.ServeSignInPage)
 	})
 
-	r.With(middleware.RedirectUnauthorized(s.Session)).Route("/", func(r chi.Router) {
+	r.With(middleware.RedirectUnauthorized(s.Session)).Group(func(r chi.Router) {
 		r.Get("/", s.Deal.ServeDealsPage)
 		r.Get("/profile", s.Profile.ServeProfilePage)
 	})
@@ -94,9 +93,5 @@ func (s *Server) setupRoutes() http.Handler {
 			r.Get("/:userID", func(w http.ResponseWriter, r *http.Request) {})
 		})
 	})
-
-	fs := http.FileServer(http.Dir(filepath.Join("../templates")))
-	r.Handle("/static/*", http.StripPrefix("/static/", fs))
-
 	return r
 }

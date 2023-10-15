@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/hrvadl/coursework_db/pkg/repo"
 )
@@ -18,12 +17,19 @@ type UserCtx struct {
 type key string
 
 const User key = "user"
+const SessionCookie = "Stock-Session-Auth"
 
 func WithAuth(session repo.Session) HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authH := r.Header.Get("Stock-Session-Auth")
-			auth, err := strconv.ParseUint(authH, 10, 64)
+			authCookie, err := r.Cookie(SessionCookie)
+
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
 
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -33,11 +39,6 @@ func WithAuth(session repo.Session) HTTPMiddleware {
 			sess, err := session.GetByID(uint(auth))
 
 			if err != nil || sess == nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			if time.Now().Compare(sess.ValidUntil) != -1 {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
@@ -56,8 +57,14 @@ func WithAuth(session repo.Session) HTTPMiddleware {
 func RedirectAuthorized(session repo.Session) HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authH := r.Header.Get("Stock-Session-Auth")
-			auth, err := strconv.ParseUint(authH, 10, 64)
+			authCookie, err := r.Cookie(SessionCookie)
+
+			if err != nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
 
 			if err != nil {
 				next.ServeHTTP(w, r)
@@ -67,11 +74,6 @@ func RedirectAuthorized(session repo.Session) HTTPMiddleware {
 			sess, err := session.GetByID(uint(auth))
 
 			if err != nil || sess == nil {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			if time.Now().Compare(sess.ValidUntil) != -1 {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -84,8 +86,14 @@ func RedirectAuthorized(session repo.Session) HTTPMiddleware {
 func RedirectUnauthorized(session repo.Session) HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authH := r.Header.Get("Stock-Session-Auth")
-			auth, err := strconv.ParseUint(authH, 10, 64)
+			authCookie, err := r.Cookie(SessionCookie)
+
+			if err != nil {
+				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
+				return
+			}
+
+			auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
 
 			if err != nil {
 				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
@@ -95,11 +103,6 @@ func RedirectUnauthorized(session repo.Session) HTTPMiddleware {
 			sess, err := session.GetByID(uint(auth))
 
 			if err != nil || sess == nil {
-				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
-				return
-			}
-
-			if time.Now().Compare(sess.ValidUntil) != -1 {
 				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
 				return
 			}

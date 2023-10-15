@@ -1,0 +1,83 @@
+{{ define "sign-up-form" }}
+<form hx-post="/v1/auth/sign-up" hx-swap="outerHTML" hx-trigger="submit">
+  <div class="mb-4">
+    <label for="name" class="block text-gray-700 text-sm font-bold mb-2"
+      >First Name</label
+    >
+    <input
+      type="text"
+      id="first-name"
+      name="first-name"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+  </div>
+
+  <div class="mb-4">
+    <label for="name" class="block text-gray-700 text-sm font-bold mb-2"
+      >Last Name</label
+    >
+    <input
+      type="text"
+      id="last-name"
+      name="last-name"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+  </div>
+
+  <div class="mb-4">
+    <label for="email" class="block text-gray-700 text-sm font-bold mb-2"
+      >Email Address</label
+    >
+    <input
+      type="email"
+      id="email"
+      name="email"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+  </div>
+
+  <div class="mb-6">
+    <label for="password" class="block text-gray-700 text-sm font-bold mb-2"
+      >Password</label
+    >
+    <input
+      type="password"
+      id="password"
+      name="password"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+  </div>
+
+  <fieldset class="mb-4">
+    <legend>Who are you?</legend>
+
+    <div>
+      <input type="radio" id="stock" name="role" value="stock" checked />
+      <label class="text-gray-700 text-sm font-bold mb-2" for="stock"
+        >Stock</label
+      >
+    </div>
+
+    <div>
+      <input type="radio" id="emitent" name="role" value="emitent" />
+      <label class="text-gray-700 text-sm font-bold mb-2" for="emitent"
+        >Emitent</label
+      >
+    </div>
+  </fieldset>
+
+  <button
+    type="submit"
+    class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
+  >
+    Sign Up
+  </button>
+  {{ if .Success }}
+  <span>Now you can sign in!</span>
+  {{ end }}
+  <br />
+  {{ if .Error }}
+  <span>{{ .Error }}</span>
+  {{ end }}
+</form>
+{{ end }}

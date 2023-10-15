@@ -20,5 +20,5 @@ type Deal struct {
 }
 
 func (d *Deal) ServeDealsPage(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, d.t.ResolveHTML("deals.html"))
+	d.t.Execute(w, "deals.html", nil)
 }

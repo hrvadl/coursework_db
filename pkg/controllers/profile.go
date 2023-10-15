@@ -56,5 +56,5 @@ func (p *Profile) ServeProfilePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.ServeFile(w, r, p.t.ResolveHTML("profile.html"))
+	p.t.Execute(w, "profile.html", nil)
 }

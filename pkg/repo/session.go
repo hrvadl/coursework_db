@@ -3,6 +3,7 @@ package repo
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hrvadl/coursework_db/pkg/models"
@@ -44,10 +45,11 @@ func (s *session) Create(u *models.User) (*models.Session, error) {
 func (s *session) GetByID(id uint) (*models.Session, error) {
 	var session models.Session
 
-	if err := s.db.Find(id).Error; err != nil {
-		return nil, fmt.Errorf("cannot create new session: %v", err)
+	if err := s.db.First(&session, id).Error; err != nil {
+		return nil, fmt.Errorf("cannot find session with ID %v: %v", id, err)
 	}
 
+	log.Printf("now: %v, valid till: %v", time.Now(), session.ValidUntil)
 	if time.Now().Compare(session.ValidUntil) != -1 {
 		return nil, errors.New("session is not valid")
 	}
