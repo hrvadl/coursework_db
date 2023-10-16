@@ -7,7 +7,7 @@ import (
 
 type Inventory interface {
 	GetByID(id int) (*models.InventoryItem, error)
-	Get(userID int) ([]models.InventoryItem, error)
+	GetByUserID(userID int) ([]models.InventoryItem, error)
 	Patch(item *models.InventoryItem) (*models.InventoryItem, error)
 	Delete(id int) error
 }
@@ -30,7 +30,7 @@ func (i *inventory) GetByID(id int) (*models.InventoryItem, error) {
 	return &item, nil
 }
 
-func (i *inventory) Get(userID int) ([]models.InventoryItem, error) {
+func (i *inventory) GetByUserID(userID int) ([]models.InventoryItem, error) {
 	var items []models.InventoryItem
 	err := i.db.Where(&models.InventoryItem{OwnerID: uint(userID)}).Error
 

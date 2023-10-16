@@ -3,6 +3,7 @@ package repo
 import (
 	"github.com/hrvadl/coursework_db/pkg/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Emitent interface {
@@ -10,6 +11,7 @@ type Emitent interface {
 	GetByID(id int) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	Create(u *models.User) (*models.User, error)
+	Patch(u *models.User) (*models.User, error)
 }
 
 type emitent struct {
@@ -32,7 +34,11 @@ func (r *emitent) Get() ([]models.User, error) {
 
 func (r *emitent) GetByID(id int) (*models.User, error) {
 	var user models.User
-	res := r.db.Where(&models.User{ID: uint(id), Role: models.EmitentRole}).First(&user)
+	res := r.db.Model(&models.User{}).
+		Preload(clause.Associations).
+		Preload("Inventory.Security").
+		Where(&models.User{ID: uint(id), Role: models.EmitentRole}).
+		First(&user)
 
 	if res.Error != nil {
 		return nil, res.Error
@@ -54,6 +60,14 @@ func (r *emitent) GetByEmail(email string) (*models.User, error) {
 
 func (r *emitent) Create(u *models.User) (*models.User, error) {
 	if res := r.db.Create(&u); res.Error != nil {
+		return nil, res.Error
+	}
+
+	return u, nil
+}
+
+func (r *emitent) Patch(u *models.User) (*models.User, error) {
+	if res := r.db.Model(u).Updates(u); res.Error != nil {
 		return nil, res.Error
 	}
 

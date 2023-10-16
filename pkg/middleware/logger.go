@@ -31,12 +31,20 @@ func (w *responseWriterLogger) Header() http.Header {
 	return w.w.Header()
 }
 
-func WithHTTPLogger(log *zap.SugaredLogger) HTTPMiddleware {
+func NewHTTPLogger(log *zap.SugaredLogger) *HTTPLogger {
+	return &HTTPLogger{log}
+}
+
+type HTTPLogger struct {
+	log *zap.SugaredLogger
+}
+
+func (h *HTTPLogger) WithHTTPLogger() HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			writerWrapper := newResponseWriterLogger(w)
 			next.ServeHTTP(writerWrapper, r)
-			log.Debugf("[%v] %v %v %v", r.Method, r.URL.String(), writerWrapper.code, writerWrapper.body.String())
+			h.log.Debugf("[%v] %v %v %v", r.Method, r.URL.String(), writerWrapper.code, writerWrapper.body.String())
 		})
 	}
 }

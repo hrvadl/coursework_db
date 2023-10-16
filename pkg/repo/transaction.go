@@ -3,6 +3,7 @@ package repo
 import (
 	"github.com/hrvadl/coursework_db/pkg/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Transaction interface {
@@ -21,6 +22,9 @@ type transaction struct {
 func (t *transaction) Get(userID int) ([]models.Transaction, error) {
 	var transactions []models.Transaction
 	res := t.db.
+		Model(&models.Transaction{}).
+		Preload(clause.Associations).
+		Preload("Subject.Security").
 		Where(&models.Transaction{SellerID: uint(userID)}).
 		Or(&models.Transaction{BuyerID: uint(userID)}).
 		Find(&transactions)

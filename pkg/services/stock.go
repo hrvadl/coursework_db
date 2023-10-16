@@ -8,6 +8,7 @@ import (
 type Stock interface {
 	GetByID(id int) (*models.User, error)
 	Get() ([]models.User, error)
+	Patch(user *models.User) (*models.User, error)
 }
 
 type stock struct {
@@ -28,4 +29,8 @@ func (s *stock) Get() ([]models.User, error) {
 
 func (s *stock) GetByID(id int) (*models.User, error) {
 	return s.repo.GetByID(id)
+}
+
+func (s *stock) Patch(user *models.User) (*models.User, error) {
+	return s.repo.Patch(user)
 }

@@ -3,6 +3,7 @@ package repo
 import (
 	"github.com/hrvadl/coursework_db/pkg/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Stock interface {
@@ -10,6 +11,7 @@ type Stock interface {
 	GetByID(id int) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	Create(u *models.User) (*models.User, error)
+	Patch(u *models.User) (*models.User, error)
 }
 
 type stock struct {
@@ -32,7 +34,11 @@ func (r *stock) Get() ([]models.User, error) {
 
 func (r *stock) GetByID(id int) (*models.User, error) {
 	var user models.User
-	res := r.db.Where(&models.User{ID: uint(id), Role: models.StockRole}).First(&user)
+	res := r.db.Model(&models.User{}).
+		Preload(clause.Associations).
+		Preload("Inventory.Security").
+		Where(&models.User{ID: uint(id), Role: models.StockRole}).
+		First(&user)
 
 	if res.Error != nil {
 		return nil, res.Error
@@ -54,6 +60,14 @@ func (r *stock) GetByEmail(email string) (*models.User, error) {
 
 func (r *stock) Create(u *models.User) (*models.User, error) {
 	if res := r.db.Create(&u); res.Error != nil {
+		return nil, res.Error
+	}
+
+	return u, nil
+}
+
+func (r *stock) Patch(u *models.User) (*models.User, error) {
+	if res := r.db.Model(u).Updates(u); res.Error != nil {
 		return nil, res.Error
 	}
 

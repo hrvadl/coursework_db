@@ -33,7 +33,7 @@ func (i *inventory) GetByID(id int) (*models.InventoryItem, error) {
 }
 
 func (i *inventory) GetUserInventory(userID int) ([]models.InventoryItem, error) {
-	return i.repo.Get(userID)
+	return i.repo.GetByUserID(userID)
 }
 
 func (i *inventory) Patch(item *models.InventoryItem) (*models.InventoryItem, error) {

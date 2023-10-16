@@ -1,14 +1,16 @@
 package middleware
 
 import (
-	"net/http"
-
 	"github.com/go-chi/cors"
 )
 
-type HTTPMiddleware func(http.Handler) http.Handler
+func NewCors() *Cors {
+	return &Cors{}
+}
 
-func WithCors() HTTPMiddleware {
+type Cors struct{}
+
+func (m *Cors) WithCors() HTTPMiddleware {
 	return cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

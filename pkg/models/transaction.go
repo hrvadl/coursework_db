@@ -8,6 +8,7 @@ type Transaction struct {
 	Seller   User
 	SellerID uint
 
+	Subject   Deal
 	SubjectID uint
 	Amount    uint
 }

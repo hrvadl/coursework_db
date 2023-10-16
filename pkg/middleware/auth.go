@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/hrvadl/coursework_db/pkg/models"
 	"github.com/hrvadl/coursework_db/pkg/repo"
 )
 
@@ -16,27 +16,46 @@ type UserCtx struct {
 
 type key string
 
-const User key = "user"
-const SessionCookie = "Stock-Session-Auth"
+const (
+	User          key    = "user"
+	SessionCookie string = "Stock-Session-Auth"
+)
 
-func WithAuth(session repo.Session) HTTPMiddleware {
+func NewAuth(s repo.Session) *Auth {
+	return &Auth{s}
+}
+
+type Auth struct {
+	session repo.Session
+}
+
+// Only extracts the session cookie (if it exists) and puts it in the context
+// Not panic and do nothing in case of session cookie is not present
+func (m *Auth) WithUserCredsExtractor() HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authCookie, err := r.Cookie(SessionCookie)
+			sess, err := m.getAuthCredsFromRequest(r)
 
-			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
+			if err == nil && sess != nil {
+				ctx := context.WithValue(r.Context(), User, UserCtx{
+					ID:   sess.UserID,
+					Role: sess.UserRole,
+				})
+
+				r = r.WithContext(ctx)
 			}
 
-			auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 
-			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			sess, err := session.GetByID(uint(auth))
+// Extracts the session cookie and puts it in the context
+// In case of session cookie is not present return 401
+func (m *Auth) WithAuth() HTTPMiddleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			sess, err := m.getAuthCredsFromRequest(r)
 
 			if err != nil || sess == nil {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -54,24 +73,26 @@ func WithAuth(session repo.Session) HTTPMiddleware {
 	}
 }
 
-func RedirectAuthorized(session repo.Session) HTTPMiddleware {
+func (m *Auth) WithoutAuth() HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authCookie, err := r.Cookie(SessionCookie)
+			sess, err := m.getAuthCredsFromRequest(r)
 
-			if err != nil {
-				next.ServeHTTP(w, r)
+			if err == nil && sess != nil {
+				w.WriteHeader(http.StatusMethodNotAllowed)
 				return
 			}
 
-			auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 
-			if err != nil {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			sess, err := session.GetByID(uint(auth))
+// Extracts the session cookie and redirects to the home page if it is present
+func (m *Auth) RedirectAuthorized() HTTPMiddleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			sess, err := m.getAuthCredsFromRequest(r)
 
 			if err != nil || sess == nil {
 				next.ServeHTTP(w, r)
@@ -83,26 +104,14 @@ func RedirectAuthorized(session repo.Session) HTTPMiddleware {
 	}
 }
 
-func RedirectUnauthorized(session repo.Session) HTTPMiddleware {
+// Extracts the session cookie and puts it in the context
+// In case of session cookie is not present redirects to the auth page
+func (m *Auth) RedirectUnauthorized() HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authCookie, err := r.Cookie(SessionCookie)
+			sess, err := m.getAuthCredsFromRequest(r)
 
 			if err != nil {
-				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
-				return
-			}
-
-			auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
-
-			if err != nil {
-				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
-				return
-			}
-
-			sess, err := session.GetByID(uint(auth))
-
-			if err != nil || sess == nil {
 				http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
 				return
 			}
@@ -118,21 +127,19 @@ func RedirectUnauthorized(session repo.Session) HTTPMiddleware {
 	}
 }
 
-func GetUserCtx(ctx context.Context) (*UserCtx, error) {
-	val := ctx.Value(User)
-	userCtx, ok := val.(UserCtx)
+func (m *Auth) getAuthCredsFromRequest(r *http.Request) (*models.Session, error) {
+	authCookie, err := r.Cookie(SessionCookie)
 
-	if !ok {
-		return nil, errors.New("cannot get user context")
-	}
-
-	return &userCtx, nil
-}
-
-func Must(ctx *UserCtx, err error) *UserCtx {
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return ctx
+	auth, err := strconv.ParseUint(authCookie.Value, 10, 64)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sess, err := m.session.GetByID(uint(auth))
+	return sess, err
 }

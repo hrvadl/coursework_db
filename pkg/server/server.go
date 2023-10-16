@@ -23,8 +23,13 @@ type Controllers struct {
 }
 
 type HTTPServerArgs struct {
+	AuthM   *middleware.Auth
+	CorsM   *middleware.Cors
+	LoggerM *middleware.HTTPLogger
+
 	Session repo.Session
 	Logger  *zap.SugaredLogger
+
 	*Controllers
 }
 
@@ -42,54 +47,46 @@ func (s *Server) ListenAndServe(port string) error {
 func (s *Server) setupRoutes() http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.WithCors())
-	r.Use(middleware.WithHTTPLogger(s.Logger))
+	r.Use(s.CorsM.WithCors())
+	r.Use(s.LoggerM.WithHTTPLogger())
 
-	r.With(middleware.RedirectAuthorized(s.Session)).Route("/auth", func(r chi.Router) {
+	r.With(s.AuthM.RedirectAuthorized()).Route("/auth", func(r chi.Router) {
 		r.Get("/sign-up", s.Auth.ServeSignUpPage)
 		r.Get("/sign-in", s.Auth.ServeSignInPage)
 	})
 
-	r.With(middleware.RedirectUnauthorized(s.Session)).Group(func(r chi.Router) {
+	r.With(s.AuthM.WithUserCredsExtractor()).Group(func(r chi.Router) {
 		r.Get("/", s.Deal.ServeDealsPage)
 		r.Get("/deals/{id}", s.Deal.ServeDealPage)
+	})
+
+	r.With(s.AuthM.RedirectUnauthorized()).Group(func(r chi.Router) {
 		r.Get("/profile", s.Profile.ServeProfilePage)
 	})
 
-	// REST routes
 	r.Route("/v1", func(r chi.Router) {
-		r.Route("/auth", func(r chi.Router) {
+		r.With(s.AuthM.WithoutAuth()).Route("/auth", func(r chi.Router) {
 			r.Post("/sign-up", s.Auth.HandleSignUp)
 			r.Post("/sign-in", s.Auth.HandleSignIn)
 		})
 
-		r.Route("/profile", func(r chi.Router) {
-		})
-
-		r.Route("/stocks", func(r chi.Router) {
-			r.Use(middleware.WithAuth(s.Session))
-			r.Patch("/", func(w http.ResponseWriter, r *http.Request) {})
-		})
-
-		r.Route("/emitents", func(r chi.Router) {
-			r.Use(middleware.WithAuth(s.Session))
-			r.Patch("/", func(w http.ResponseWriter, r *http.Request) {
+		r.With(s.AuthM.WithAuth()).Group(func(r chi.Router) {
+			r.Route("/profile", func(r chi.Router) {
+				r.Patch("/{id}", s.Profile.HandlePatch)
 			})
-		})
 
-		r.Route("/deals", func(r chi.Router) {
-			r.Get("/", s.Deal.HandleGet)
-			r.With(middleware.WithAuth(s.Session)).Group(func(r chi.Router) {
+			r.Route("/deals", func(r chi.Router) {
+				r.Get("/", s.Deal.HandleGet)
 				r.Post("/", s.Deal.HandleCreate)
 				r.Patch("/:id", func(w http.ResponseWriter, r *http.Request) {})
 				r.Delete("/:id", func(w http.ResponseWriter, r *http.Request) {})
 			})
+
+			r.Route("/transactions", func(r chi.Router) {
+				r.Get("/:userID", func(w http.ResponseWriter, r *http.Request) {})
+			})
 		})
 
-		r.Route("/transactions", func(r chi.Router) {
-			r.Use(middleware.WithAuth(s.Session))
-			r.Get("/:userID", func(w http.ResponseWriter, r *http.Request) {})
-		})
 	})
 	return r
 }

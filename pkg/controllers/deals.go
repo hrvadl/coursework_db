@@ -11,10 +11,11 @@ import (
 	"github.com/hrvadl/coursework_db/pkg/templates"
 )
 
-func NewDeal(ds services.Deal, ss services.Security, t *templates.Resolver) *Deal {
+func NewDeal(ds services.Deal, ss services.Security, is services.Inventory, t *templates.Resolver) *Deal {
 	return &Deal{
 		ds: ds,
 		ss: ss,
+		is: is,
 		t:  t,
 	}
 }
@@ -22,11 +23,11 @@ func NewDeal(ds services.Deal, ss services.Security, t *templates.Resolver) *Dea
 type Deal struct {
 	ds services.Deal
 	ss services.Security
+	is services.Inventory
 	t  *templates.Resolver
 }
 
 func (d *Deal) ServeDealsPage(w http.ResponseWriter, r *http.Request) {
-	ctx := middleware.Must(middleware.GetUserCtx(r.Context()))
 	deals, err := d.ds.Get()
 
 	if err != nil {
@@ -41,30 +42,65 @@ func (d *Deal) ServeDealsPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var role string
+	ctx, _ := middleware.GetUserCtx(r.Context())
+
+	if ctx == nil {
+		role = ""
+	} else {
+		role = ctx.Role
+	}
+
 	d.t.Execute(w, "deals.html", templates.DealsArgs{
 		Deals:      deals,
-		Role:       ctx.Role,
+		Role:       role,
 		Securities: securities,
+		Logined:    ctx != nil,
 	})
 }
 
 func (d *Deal) ServeDealPage(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
-	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
 
+	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
 	if err != nil {
 		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
 		return
 	}
 
 	deal, err := d.ds.GetByID(int(dealID))
-
 	if err != nil || deal == nil {
 		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
 		return
 	}
 
-	d.t.Execute(w, "deal.html", templates.DealArgs{Deal: deal})
+	ctx, _ := middleware.GetUserCtx(r.Context())
+	if ctx == nil {
+		d.t.Execute(w, "deal.html", templates.DealArgs{
+			Deal:    deal,
+			Logined: false,
+		})
+		return
+	}
+
+	securities, err := d.ss.Get()
+	if err != nil {
+		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
+		return
+	}
+
+	has, err := d.is.GetUserInventory(int(ctx.ID))
+	if err != nil {
+		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
+		return
+	}
+
+	d.t.Execute(w, "deal.html", templates.DealArgs{
+		Deal:       deal,
+		Logined:    true,
+		Securities: securities,
+		AmountHas:  len(has),
+	})
 }
 
 func (d *Deal) HandleCreate(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,7 @@ import (
 type Emitent interface {
 	GetByID(id int) (*models.User, error)
 	Get() ([]models.User, error)
+	Patch(user *models.User) (*models.User, error)
 }
 
 type emitent struct {
@@ -28,4 +29,8 @@ func (s *emitent) Get() ([]models.User, error) {
 
 func (s *emitent) GetByID(id int) (*models.User, error) {
 	return s.repo.GetByID(id)
+}
+
+func (s *emitent) Patch(user *models.User) (*models.User, error) {
+	return s.repo.Patch(user)
 }

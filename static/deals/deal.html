@@ -16,24 +16,94 @@
     ></script>
   </head>
   <body class="flex flex-col h-screen bg-gray-100">
-    {{ template "header" }}
+    {{ template "header" . }}
     <main class="flex-grow flex-shrink-0 basis-full container mx-auto py-5">
-      <section class="mb-4 flex flex-col gap-2">
-        <h2 class="text-2xl font-semibold mb-3">Owner:</h2>
-        <span class="text-lg"
-          >Name: {{ .Deal.Owner.FirstName }} {{ .Deal.Owner.LastName }}</span
-        >
-        <span class="text-lg">Email: {{ .Deal.Owner.Email }} </span>
-        <span class="text-lg">Role: {{ .Deal.Owner.Role }} </span>
-      </section>
-      <section class="mb-4 flex flex-col gap-2">
-        <h2 class="text-2xl font-semibold mb-3">Deal details:</h2>
-        <span class="text-lg">Security: {{ .Deal.Security.Name }} </span>
-        <span class="text-lg">Security ID: {{ .Deal.Security.ID }} </span>
-        <span class="text-lg">Amount: {{ .Deal.Amount }} </span>
-        <span class="text-lg">Price for one: {{ .Deal.Price }} </span>
-      </section>
+      <div id="toast" class="fixed"></div>
+      <div class="flex justify-between">
+        <div>
+          <section class="mb-4 flex flex-col gap-2">
+            <h2 class="text-2xl font-semibold mb-3">Owner:</h2>
+            <span class="text-lg"
+              >Name: {{ .Deal.Owner.FirstName }} {{ .Deal.Owner.LastName
+              }}</span
+            >
+            <span class="text-lg">Email: {{ .Deal.Owner.Email }} </span>
+            <span class="text-lg">Role: {{ .Deal.Owner.Role }} </span>
+          </section>
+          <section class="mb-4 flex flex-col gap-2">
+            <h2 class="text-2xl font-semibold mb-3">Deal details:</h2>
+            <span class="text-lg">Security: {{ .Deal.Security.Name }} </span>
+            <span class="text-lg">Security ID: {{ .Deal.Security.ID }} </span>
+            <span class="text-lg">Amount: {{ .Deal.Amount }} </span>
+            <span class="text-lg">Price for one: {{ .Deal.Price }} </span>
+          </section>
+        </div>
+        {{ if and .Logined (gt .AmountHas 0) }}
+        <div>
+          <button
+            id="open-dialog"
+            class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
+            {{ if .Deal.Sell }} Buy {{ else }} Sell {{ end }}
+          </button>
+          <dialog id="deal-dialog" class="p-6">
+            <form
+              hx-patch="/v1/deals"
+              hx-target="#toast"
+              hx-trigger="submit"
+              hx-swap="outerHTML"
+            >
+              <label
+                for="amount"
+                class="block text-gray-700 text-sm font-bold mb-2"
+                >Amount</label
+              >
+              <input
+                type="number"
+                id="amount"
+                name="amount"
+                class="w-full p-2 border border-gray-300 rounded"
+              />
+              <div class="flex justify-between mt-4">
+                <button
+                  formmethod="dialog"
+                  type="submit"
+                  class="close-dialog bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="close-dialog bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+        {{ end }}
+      </div>
     </main>
     {{ template "footer" }}
+    <script async>
+      const openDialogBtn = document.getElementById("open-dialog");
+      console.log(openDialogBtn);
+      const dialog = document.getElementById("deal-dialog");
+      const closeDialogBtns = document.querySelectorAll(".close-dialog");
+
+      const openDialog = () => {
+        dialog.showModal();
+      };
+
+      const closeDialog = () => {
+        dialog.close();
+      };
+
+      openDialogBtn.addEventListener("click", openDialog);
+      closeDialogBtns.forEach((btn) =>
+        btn.addEventListener("click", openDialog)
+      );
+    </script>
   </body>
 </html>

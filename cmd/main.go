@@ -6,6 +6,7 @@ import (
 	"github.com/hrvadl/coursework_db/pkg/config"
 	"github.com/hrvadl/coursework_db/pkg/controllers"
 	"github.com/hrvadl/coursework_db/pkg/db"
+	"github.com/hrvadl/coursework_db/pkg/middleware"
 	"github.com/hrvadl/coursework_db/pkg/repo"
 	"github.com/hrvadl/coursework_db/pkg/server"
 	"github.com/hrvadl/coursework_db/pkg/services"
@@ -30,11 +31,20 @@ func main() {
 	sessionRepo := repo.NewSession(db)
 	dealRepo := repo.NewDeal(db)
 	securityRepo := repo.NewSecurity(db)
+	inventoryRepo := repo.NewInventory(db)
+	transactionRepo := repo.NewTransaction(db)
+
+	logger.Info("Initializing the middlewares...")
+	authM := middleware.NewAuth(sessionRepo)
+	logM := middleware.NewHTTPLogger(logger)
+	corsM := middleware.NewCors()
 
 	logger.Info("Initializing the core services...")
+	inventoryService := services.NewInventory(inventoryRepo, stockRepo, emitentRepo)
 	stockService := services.NewStock(stockRepo, cryptor)
 	dealService := services.NewDeal(dealRepo)
 	emitentService := services.NewEmitent(emitentRepo, cryptor)
+	transactionService := services.NewTransaction(transactionRepo)
 	securityService := services.NewSecurity(securityRepo)
 	authService := services.NewAuth(
 		stockRepo,
@@ -44,11 +54,25 @@ func main() {
 	)
 
 	authController := controllers.NewAuth(authService, tr)
-	profileController := controllers.NewProfile(emitentService, stockService, dealService, tr)
-	dealController := controllers.NewDeal(dealService, securityService, tr)
+	profileController := controllers.NewProfile(
+		emitentService,
+		stockService,
+		dealService,
+		transactionService,
+		tr,
+	)
+	dealController := controllers.NewDeal(
+		dealService,
+		securityService,
+		inventoryService,
+		tr,
+	)
 
 	logger.Infof("Server is starting on port %v", cfg.ServerPort)
 	srv := server.NewHTTP(&server.HTTPServerArgs{
+		AuthM:   authM,
+		CorsM:   corsM,
+		LoggerM: logM,
 		Session: sessionRepo,
 		Logger:  logger,
 		Controllers: &server.Controllers{

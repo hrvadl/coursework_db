@@ -9,4 +9,5 @@ type Deal struct {
 	Amount     uint
 	Price      float64
 	Active     bool
+	Sell       bool
 }
