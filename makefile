@@ -1,5 +1,5 @@
 run:
-	go run ./cmd
+	cd ./cmd && go run .
 
 up:
 	docker compose up -d
