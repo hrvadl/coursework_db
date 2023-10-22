@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/hrvadl/coursework_db/pkg/middleware"
 	"github.com/hrvadl/coursework_db/pkg/models"
@@ -76,25 +75,9 @@ func (p *Profile) ServeProfilePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-
-	userID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
-	if err != nil {
-		p.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
-		return
-	}
-
-	userCtx, err := middleware.GetUserCtx(r.Context())
-
-	if err != nil {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Something went wrong"})
-		return
-	}
-
-	if userCtx.ID != uint(userID) {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "You can update only yours profile"})
-		return
-	}
+	userCtx := middleware.Must(
+		middleware.GetUserCtx(r.Context()),
+	)
 
 	profileStrategy, err := p.chooseUserStrategy(userCtx)
 
@@ -103,7 +86,7 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := profileStrategy.GetByID(int(userID))
+	profile, err := profileStrategy.GetByID(int(userCtx.ID))
 
 	if err != nil {
 		p.t.Execute(w, "toast", templates.ToastArgs{Error: "User not found"})
@@ -119,9 +102,24 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isWithdraw, _ := strconv.ParseBool(r.FormValue("withdraw"))
+
+	var balance int
+	switch isWithdraw {
+	case true:
+		balance = profile.Balance - int(amount)
+	default:
+		balance = profile.Balance + int(amount)
+	}
+
+	if balance < 0 {
+		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Invalid money amount"})
+		return
+	}
+
 	dto := &models.User{
-		ID:      uint(userID),
-		Balance: profile.Balance - int(amount),
+		ID:      uint(userCtx.ID),
+		Balance: balance,
 	}
 
 	if _, err := profileStrategy.Patch(dto); err != nil {
@@ -131,6 +129,30 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("HX-Trigger", "refresh-general-info")
 	p.t.Execute(w, "toast", templates.ToastArgs{Message: "Successfully updated the user"})
+}
+
+func (p *Profile) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.Must(
+		middleware.GetUserCtx(r.Context()),
+	)
+
+	profileStrategy, err := p.chooseUserStrategy(userCtx)
+
+	if err != nil {
+		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Something went wrong"})
+		return
+	}
+
+	profile, err := profileStrategy.GetByID(int(userCtx.ID))
+
+	if err != nil {
+		p.t.Execute(w, "toast", templates.ToastArgs{Error: "User not found"})
+		return
+	}
+
+	p.t.Execute(w, "general-info", templates.GeneralProfileInfoArgs{
+		User: profile,
+	})
 }
 
 func (p *Profile) chooseUserStrategy(userCtx *middleware.UserCtx) (ProfileStrategy, error) {

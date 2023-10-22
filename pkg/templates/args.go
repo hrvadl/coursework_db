@@ -40,3 +40,7 @@ type ProfileArgs struct {
 	Transactions []models.Transaction
 	Logined      bool
 }
+
+type GeneralProfileInfoArgs struct {
+	User *models.User
+}

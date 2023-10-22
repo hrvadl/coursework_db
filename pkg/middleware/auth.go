@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/hrvadl/coursework_db/pkg/models"
 	"github.com/hrvadl/coursework_db/pkg/repo"
+	"github.com/hrvadl/coursework_db/pkg/templates"
 )
 
 type UserCtx struct {
@@ -21,12 +23,16 @@ const (
 	SessionCookie string = "Stock-Session-Auth"
 )
 
-func NewAuth(s repo.Session) *Auth {
-	return &Auth{s}
+func NewAuth(s repo.Session, t *templates.Resolver) *Auth {
+	return &Auth{
+		session: s,
+		templ:   t,
+	}
 }
 
 type Auth struct {
 	session repo.Session
+	templ   *templates.Resolver
 }
 
 // Only extracts the session cookie (if it exists) and puts it in the context
@@ -122,6 +128,34 @@ func (m *Auth) RedirectUnauthorized() HTTPMiddleware {
 			})
 
 			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func (m *Auth) WithSameUserID() HTTPMiddleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			parts := strings.Split(r.URL.Path, "/")
+
+			userID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+			if err != nil {
+				m.templ.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
+				return
+			}
+
+			userCtx, err := GetUserCtx(r.Context())
+
+			if err != nil {
+				m.templ.Execute(w, "toast", templates.ToastArgs{Error: "Something went wrong"})
+				return
+			}
+
+			if userCtx.ID != uint(userID) {
+				m.templ.Execute(w, "toast", templates.ToastArgs{Error: "You can update only yours profile"})
+				return
+			}
+
 			next.ServeHTTP(w, r)
 		})
 	}

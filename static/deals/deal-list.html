@@ -1,4 +1,11 @@
 {{ define "deal-list" }}
+<span></span>
+{{ if not .Deals }}
+<span class="mt-4 text-xl"
+  >Unfortunately, there's nothing to show... {{ if eq .Role "stock" }} But you
+  always can create a new one! {{ end }}
+</span>
+{{ end }}
 <ul class="flex flex-col gap-4">
   {{ range .Deals }}
   <li class="w-full p-2 hover:bg-gray-200 duration-150 cursor-pointer w-full">
@@ -7,7 +14,8 @@
         Security {{ .Security.Name }}
       </p>
       <p class="flex-grow-0 flex-shrink-0 truncate w-36 text-base">
-        Price: {{ .Price }}$
+        {{ if .Sell }} Sell price: {{ .Price }}$ {{ else }} Buy price {{ .Price
+        }}$ {{ end }}
       </p>
       <p class="flex-grow-0 flex-shrink-0 truncate w-28 text-base">
         Amount: {{ .Amount }}

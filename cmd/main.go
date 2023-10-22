@@ -35,7 +35,7 @@ func main() {
 	transactionRepo := repo.NewTransaction(db)
 
 	logger.Info("Initializing the middlewares...")
-	authM := middleware.NewAuth(sessionRepo)
+	authM := middleware.NewAuth(sessionRepo, tr)
 	logM := middleware.NewHTTPLogger(logger)
 	corsM := middleware.NewCors()
 

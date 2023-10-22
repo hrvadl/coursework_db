@@ -72,7 +72,10 @@ func (s *Server) setupRoutes() http.Handler {
 
 		r.With(s.AuthM.WithAuth()).Group(func(r chi.Router) {
 			r.Route("/profile", func(r chi.Router) {
-				r.Patch("/{id}", s.Profile.HandlePatch)
+				r.With(s.AuthM.WithSameUserID()).Group(func(r chi.Router) {
+					r.Patch("/{id}", s.Profile.HandlePatch)
+					r.Get("/general-info/{id}", s.Profile.HandleGetGeneralInfo)
+				})
 			})
 
 			r.Route("/deals", func(r chi.Router) {

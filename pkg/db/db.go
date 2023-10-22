@@ -33,7 +33,8 @@ func New(dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if res := db.Raw("SELECT * FROM securities"); res.RowsAffected != 0 {
+	result := db.First(&models.Security{})
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return db, nil
 	}
 

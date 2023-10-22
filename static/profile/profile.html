@@ -19,101 +19,10 @@
     {{ template "header" . }}
     <main class="flex-grow flex-shrink-0 basis-full container mx-auto py-5">
       <div id="toast" class="fixed"></div>
-      <section class="mb-10">
-        <h2 class="text-2xl font-semibold mb-4">General info</h2>
-        <div class="flex flex-col gap-2">
-          <p class="text-base">
-            Name: {{ .User.FirstName }} {{ .User.LastName }}
-          </p>
-          <p class="text-base">Email: {{ .User.Email }}</p>
-          <p class="text-base">Role: {{ .User.Role }}</p>
-          <p class="text-base">Balance: {{ .User.Balance }}</p>
-        </div>
-        <div class="flex gap-6 mt-2">
-          <button
-            id="open-withdraw-money-modal"
-            class="bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          >
-            Withdraw
-          </button>
-          <button
-            type="submit"
-            class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          >
-            Add
-          </button>
-
-          <dialog id="withdraw-money-dialog" class="p-6">
-            <form
-              hx-patch="/v1/profile/{{ .User.ID }}"
-              hx-target="#toast"
-              hx-trigger="submit"
-              hx-swap="outerHTML"
-            >
-              <label
-                for="amount"
-                class="block text-gray-700 text-sm font-bold mb-2"
-                >Amount to withdraw</label
-              >
-              <input
-                min="1"
-                max="{{ .User.Balance }}"
-                type="number"
-                id="amount"
-                name="amount"
-                class="w-full mb-2 p-2 border border-gray-300 rounded"
-              />
-              <div class="flex justify-between gap-3 mt-4">
-                <button
-                  formmethod="dialog"
-                  type="submit"
-                  class="close-withdraw-money-modal bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  class="close-withdraw-money-modal bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                >
-                  Confirm
-                </button>
-              </div>
-            </form>
-          </dialog>
-        </div>
-      </section>
-      <section class="mb-10">
-        <h2 class="text-2xl font-semibold">Inventory</h2>
-        <p class="block mb-2">Total items: {{ len .User.Inventory }}</p>
-        <div class="flex gap-6 mb-2">
-          <button
-            id="open-withdraw-inventory-modal"
-            class="bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          >
-            Withdraw
-          </button>
-          <button
-            type="submit"
-            class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          >
-            Add
-          </button>
-        </div>
-        <ul class="flex flex-col gap-2">
-          {{ range .User.Inventory }}
-          <li
-            class="w-full p-2 hover:bg-gray-200 duration-150 cursor-pointer w-full"
-          >
-            <p class="flex-grow-0 flex-shrink-0 w-36 truncate text-base">
-              Security {{ .Security.Name }}
-            </p>
-            <p class="flex-grow-0 flex-shrink-0 truncate w-28 text-base">
-              Amount: {{ .Amount }}
-            </p>
-          </li>
-          {{ end }}
-        </ul>
-      </section>
+      {{ template "general-info" . }}
+      <span></span>
+      {{ template "inventory" . }}
+      <span></span>
       {{ if eq .User.Role "stock" }}
       <section class="mb-10">
         <h2 class="text-2xl font-semibold mb-4">Deals</h2>
@@ -128,7 +37,8 @@
                 Security {{ .Security.Name }}
               </p>
               <p class="flex-grow-0 flex-shrink-0 truncate w-36 text-base">
-                Price: {{ .Price }}$
+                {{ if .Sell }} Sell price: {{ .Price }}$ {{ else }} Buy price {{
+                .Price }}$ {{ end }}
               </p>
               <p class="flex-grow-0 flex-shrink-0 truncate w-28 text-base">
                 Amount: {{ .Amount }}
@@ -165,31 +75,55 @@
       </section>
     </main>
     {{ template "footer" }}
-    <script async type="text/javascript">
-      const withdrawMoneyDialog = document.getElementById(
-        "withdraw-money-dialog"
-      );
-
-      const openWithdrawModalBtn = document.getElementById(
-        "open-withdraw-money-modal"
-      );
-
-      const closeWithdrawModalBtns = document.querySelectorAll(
-        ".close-withdraw-money-modal"
-      );
-
+    <script id="money" async type="text/javascript">
       const closeWithdrawModal = () => {
+        const withdrawMoneyDialog = document.getElementById(
+          "withdraw-money-dialog"
+        );
         withdrawMoneyDialog.close();
       };
 
+      const closeAddModal = () => {
+        const addMoneyDialog = document.getElementById("add-money-dialog");
+        addMoneyDialog.close();
+      };
+
       const openWithdrawModal = () => {
+        const withdrawMoneyDialog = document.getElementById(
+          "withdraw-money-dialog"
+        );
         withdrawMoneyDialog.showModal();
       };
 
-      openWithdrawModalBtn.addEventListener("click", openWithdrawModal);
-      closeWithdrawModalBtns.forEach((btn) =>
-        btn.addEventListener("click", closeWithdrawModal)
-      );
+      const openAddModal = () => {
+        const addMoneyDialog = document.getElementById("add-money-dialog");
+        addMoneyDialog.showModal();
+      };
+    </script>
+    <script id="inventory" async type="text/javascript">
+      const closeWithdrawInventoryDialog = () => {
+        const closeDialog = document.getElementById(
+          "withdraw-inventory-dialog"
+        );
+        closeDialog.close();
+      };
+
+      const openWithdrawInventoryDialog = () => {
+        const closeDialog = document.getElementById(
+          "withdraw-inventory-dialog"
+        );
+        closeDialog.showModal();
+      };
+
+      const closeAddInventoryModal = () => {
+        const addDialog = document.getElementById("add-inventory-dialog");
+        addDialog.close();
+      };
+
+      const openAddInventoryModal = () => {
+        const addDialog = document.getElementById("add-inventory-dialog");
+        addDialog.showModal();
+      };
     </script>
   </body>
 </html>

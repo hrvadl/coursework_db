@@ -128,12 +128,15 @@ func (d *Deal) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sell, _ := strconv.ParseBool(r.FormValue("type"))
+
 	dto := &models.Deal{
 		OwnerID:    ctx.ID,
 		SecurityID: uint(securityID),
 		Amount:     uint(amount),
 		Price:      price,
 		Active:     true,
+		Sell:       sell,
 	}
 
 	if _, err := d.ds.Create(dto); err != nil {

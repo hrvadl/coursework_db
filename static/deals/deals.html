@@ -50,6 +50,15 @@
               <option value="{{ .ID }}">{{ .Name }}</option>
               {{ end }}
             </select>
+            <select
+              required
+              id="type"
+              name="type"
+              class="w-full p-2 border border-gray-300 rounded mb-4"
+            >
+              <option value="sell">Sell</option>
+              <option value="buy">Buy</option>
+            </select>
             <label
               for="price"
               class="block text-gray-700 text-sm font-bold mb-2"
@@ -79,7 +88,7 @@
             <div class="flex justify-between mt-4">
               <button
                 formmethod="dialog"
-                type="submit"
+                type="reset"
                 class="close-dialog bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
               >
                 Cancel
@@ -96,12 +105,6 @@
         {{ end }}
       </section>
       <section>
-        {{ if not .Deals }}
-        <span class="mt-4 text-xl"
-          >Unfortunately, there's nothing to show... {{ if eq .Role "stock" }}
-          But you always can create a new one! {{ end }}
-        </span>
-        {{ end }}
         <div
           hx-get="/v1/deals"
           hx-swap="innerHTML"

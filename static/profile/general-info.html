@@ -1,0 +1,108 @@
+{{ define "general-info" }}
+<section
+  hx-swap="outerHTML"
+  hx-get="/v1/profile/general-info/{{ .User.ID }}"
+  hx-trigger="refresh-general-info from:body"
+  class="mb-10"
+>
+  <h2 class="text-2xl font-semibold mb-4">General info</h2>
+  <div class="flex flex-col gap-2">
+    <p class="text-base">Name: {{ .User.FirstName }} {{ .User.LastName }}</p>
+    <p class="text-base">Email: {{ .User.Email }}</p>
+    <p class="text-base">Role: {{ .User.Role }}</p>
+    <p class="text-base">Balance: {{ .User.Balance }}</p>
+  </div>
+  <div class="flex gap-6 mt-2">
+    <button
+      onclick="openWithdrawModal()"
+      id="open-withdraw-money-modal"
+      class="bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+    >
+      Withdraw
+    </button>
+    <button
+      onclick="openAddModal()"
+      id="open-add-money-modal"
+      class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+    >
+      Add
+    </button>
+
+    <dialog id="withdraw-money-dialog" class="p-6">
+      <form
+        hx-patch="/v1/profile/{{ .User.ID }}"
+        hx-target="#toast"
+        hx-trigger="submit"
+        hx-swap="outerHTML"
+      >
+        <label for="amount" class="block text-gray-700 text-sm font-bold mb-2"
+          >Amount to withdraw</label
+        >
+        <input
+          min="1"
+          max="{{ .User.Balance }}"
+          type="number"
+          id="amount"
+          name="amount"
+          class="w-full mb-2 p-2 border border-gray-300 rounded"
+        />
+        <input hidden type="text" name="withdraw" value="true" class="hidden" />
+        <div class="flex justify-between gap-3 mt-4">
+          <button
+            hx-boost="false"
+            type="reset"
+            onclick="closeWithdrawModal()"
+            class="close-withdraw-money-modal bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="closeWithdrawModal()"
+            type="submit"
+            class="close-withdraw-money-modal bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
+            Confirm
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="add-money-dialog" class="p-6">
+      <form
+        hx-patch="/v1/profile/{{ .User.ID }}"
+        hx-target="#toast"
+        hx-trigger="submit"
+        hx-swap="outerHTML"
+      >
+        <label for="amount" class="block text-gray-700 text-sm font-bold mb-2"
+          >Amount to add</label
+        >
+        <input
+          min="1"
+          type="number"
+          id="amount"
+          name="amount"
+          class="w-full mb-2 p-2 border border-gray-300 rounded"
+        />
+        <div class="flex justify-between gap-3 mt-4">
+          <button
+            hx-boost="false"
+            type="reset"
+            onclick="closeAddModal()"
+            class="close-add-money-modal bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="closeAddModal()"
+            type="submit"
+            class="close-add-money-modal bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          >
+            Confirm
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </div>
+</section>
+{{ end }}
