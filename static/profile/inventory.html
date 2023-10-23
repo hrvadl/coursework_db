@@ -1,15 +1,22 @@
 {{ define "inventory" }}
-<section class="mb-10">
+<section
+  hx-trigger="refresh-inventory-info from:body"
+  hx-get="/v1/inventory/{{ .User.ID }}"
+  hx-swap="outerHTML"
+  class="mb-10"
+>
   <h2 class="text-2xl font-semibold">Inventory</h2>
   <p class="block mb-2">Total items: {{ len .User.Inventory }}</p>
   <div class="flex gap-6 mb-2">
     <button
+      onclick="openWithdrawInventoryModal()"
       id="open-withdraw-inventory-modal"
       class="bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
     >
       Withdraw
     </button>
     <button
+      onclick="openAddInventoryModal()"
       type="submit"
       class="bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
     >
@@ -30,17 +37,26 @@
   </ul>
   <dialog id="withdraw-inventory-dialog" class="p-6">
     <form
-      hx-patch="/v1/profile/{{ .User.ID }}"
+      hx-patch="/v1/inventory/{{ .User.ID }}"
       hx-target="#toast"
       hx-trigger="submit"
       hx-swap="outerHTML"
     >
+      <select
+        required
+        id="securityID"
+        name="securityID"
+        class="w-full p-2 border border-gray-300 rounded mb-4"
+      >
+        {{ range .User.Inventory }}
+        <option value="{{ .Security.ID }}">{{ .Security.Name }}</option>
+        {{ end }}
+      </select>
       <label for="amount" class="block text-gray-700 text-sm font-bold mb-2"
         >Amount to withdraw</label
       >
       <input
         min="1"
-        max="{{ .User.Balance }}"
         type="number"
         id="amount"
         name="amount"
@@ -51,15 +67,61 @@
         <button
           hx-boost="false"
           type="reset"
-          onclick="closeWithdrawModal()"
-          class="close-withdraw-money-modal bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          onclick="closeWithdrawInventoryModal()"
+          class="close-withdraw-inventory-modal bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
         >
           Cancel
         </button>
         <button
-          onclick="closeWithdrawModal()"
+          onclick="closeWithdrawInventoryModal()"
           type="submit"
-          class="close-withdraw-money-modal bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          class="close-inventory-money-modal bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        >
+          Confirm
+        </button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="add-inventory-dialog" class="p-6">
+    <form
+      hx-patch="/v1/inventory/{{ .User.ID }}"
+      hx-target="#toast"
+      hx-trigger="submit"
+      hx-swap="outerHTML"
+    >
+      <select
+        required
+        id="securityID"
+        name="securityID"
+        class="w-full p-2 border border-gray-300 rounded mb-4"
+      >
+        {{ range .Securities }}
+        <option value="{{ .ID }}">{{ .Name }}</option>
+        {{ end }}
+      </select>
+      <label for="amount" class="block text-gray-700 text-sm font-bold mb-2"
+        >Amount to add</label
+      >
+      <input
+        min="1"
+        type="number"
+        id="amount"
+        name="amount"
+        class="w-full mb-2 p-2 border border-gray-300 rounded"
+      />
+      <div class="flex justify-between gap-3 mt-4">
+        <button
+          hx-boost="false"
+          type="reset"
+          onclick="closeAddInventoryModal()"
+          class="close-withdraw-inventory-modal bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        >
+          Cancel
+        </button>
+        <button
+          onclick="closeAddInventoryModal()"
+          type="submit"
+          class="close-inventory-money-modal bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
         >
           Confirm
         </button>

@@ -42,7 +42,7 @@ func main() {
 	logger.Info("Initializing the core services...")
 	inventoryService := services.NewInventory(inventoryRepo, stockRepo, emitentRepo)
 	stockService := services.NewStock(stockRepo, cryptor)
-	dealService := services.NewDeal(dealRepo)
+	dealService := services.NewDeal(dealRepo, inventoryRepo)
 	emitentService := services.NewEmitent(emitentRepo, cryptor)
 	transactionService := services.NewTransaction(transactionRepo)
 	securityService := services.NewSecurity(securityRepo)
@@ -59,12 +59,19 @@ func main() {
 		stockService,
 		dealService,
 		transactionService,
+		securityService,
 		tr,
 	)
 	dealController := controllers.NewDeal(
 		dealService,
 		securityService,
 		inventoryService,
+		tr,
+	)
+	inventoryController := controllers.NewInventory(
+		inventoryService,
+		emitentService,
+		stockService,
 		tr,
 	)
 
@@ -76,9 +83,10 @@ func main() {
 		Session: sessionRepo,
 		Logger:  logger,
 		Controllers: &server.Controllers{
-			Auth:    authController,
-			Profile: profileController,
-			Deal:    dealController,
+			Auth:      authController,
+			Profile:   profileController,
+			Deal:      dealController,
+			Inventory: inventoryController,
 		},
 	})
 	logger.Fatal(srv.ListenAndServe(cfg.ServerPort))

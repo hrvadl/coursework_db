@@ -19,11 +19,11 @@ type DealsArgs struct {
 }
 
 type DealArgs struct {
-	Logined    bool
-	Deal       *models.Deal
-	Securities []models.Security
-	Role       string
-	AmountHas  int
+	IsOwner   bool
+	Logined   bool
+	Deal      *models.Deal
+	Role      string
+	AmountHas int
 }
 
 type ToastArgs struct {
@@ -39,8 +39,13 @@ type ProfileArgs struct {
 	User         *models.User
 	Transactions []models.Transaction
 	Logined      bool
+	Securities   []models.Security
 }
 
 type GeneralProfileInfoArgs struct {
+	User *models.User
+}
+
+type InventoryArgs struct {
 	User *models.User
 }

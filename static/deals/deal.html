@@ -38,6 +38,7 @@
             <span class="text-lg">Price for one: {{ .Deal.Price }} </span>
           </section>
         </div>
+        <!-- TODO: If owner then don't show this button -->
         {{ if and .Logined (gt .AmountHas 0) }}
         <div>
           <button

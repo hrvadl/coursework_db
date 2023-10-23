@@ -10,6 +10,8 @@ import (
 type Inventory interface {
 	GetByID(id int) (*models.InventoryItem, error)
 	GetUserInventory(userID int) ([]models.InventoryItem, error)
+	GetUserInventoryBySecurityID(userID int, securityID int) (*models.InventoryItem, error)
+	CreateOrUpdate(item *models.InventoryItem) (*models.InventoryItem, error)
 	Patch(item *models.InventoryItem) (*models.InventoryItem, error)
 	Delete(id int) error
 }
@@ -34,6 +36,18 @@ func (i *inventory) GetByID(id int) (*models.InventoryItem, error) {
 
 func (i *inventory) GetUserInventory(userID int) ([]models.InventoryItem, error) {
 	return i.repo.GetByUserID(userID)
+}
+
+func (i *inventory) GetUserInventoryBySecurityID(userID int, securityID int) (*models.InventoryItem, error) {
+	return i.repo.GetUserInventoryBySecurityID(userID, securityID)
+}
+
+func (i *inventory) CreateOrUpdate(item *models.InventoryItem) (*models.InventoryItem, error) {
+	if err := i.repo.Save(item); err != nil {
+		return nil, err
+	}
+
+	return item, nil
 }
 
 func (i *inventory) Patch(item *models.InventoryItem) (*models.InventoryItem, error) {

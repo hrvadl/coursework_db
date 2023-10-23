@@ -83,12 +83,6 @@ func (d *Deal) ServeDealPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	securities, err := d.ss.Get()
-	if err != nil {
-		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
-		return
-	}
-
 	has, err := d.is.GetUserInventory(int(ctx.ID))
 	if err != nil {
 		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
@@ -96,10 +90,10 @@ func (d *Deal) ServeDealPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d.t.Execute(w, "deal.html", templates.DealArgs{
-		Deal:       deal,
-		Logined:    true,
-		Securities: securities,
-		AmountHas:  len(has),
+		Deal:      deal,
+		Logined:   true,
+		AmountHas: len(has),
+		IsOwner:   ctx.ID == deal.OwnerID,
 	})
 }
 
@@ -128,7 +122,7 @@ func (d *Deal) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sell, _ := strconv.ParseBool(r.FormValue("type"))
+	sell := r.FormValue("type") == "sell"
 
 	dto := &models.Deal{
 		OwnerID:    ctx.ID,

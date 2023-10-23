@@ -11,14 +11,20 @@ type Deal interface {
 	GetByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
 	Create(d *models.Deal) (*models.Deal, error)
+	Patch(d *models.Deal) (*models.Deal, error)
+	Delete(d int) error
 }
 
-func NewDeal(repo repo.Deal) Deal {
-	return &deal{repo}
+func NewDeal(repo repo.Deal, irepo repo.Inventory) Deal {
+	return &deal{
+		repo:  repo,
+		irepo: irepo,
+	}
 }
 
 type deal struct {
-	repo repo.Deal
+	repo  repo.Deal
+	irepo repo.Inventory
 }
 
 func (d *deal) GetByID(id int) (*models.Deal, error) {
@@ -30,6 +36,12 @@ func (d *deal) Get() ([]models.Deal, error) {
 }
 
 func (d *deal) Create(deal *models.Deal) (*models.Deal, error) {
+	hasSecurity, _ := d.irepo.GetUserInventoryBySecurityID(int(deal.OwnerID), int(deal.SecurityID))
+
+	if deal.Sell && hasSecurity == nil {
+		return nil, errors.New("cannot sell deal without security")
+	}
+
 	if !deal.Active {
 		return nil, errors.New("cannot create inactive deal")
 	}
@@ -51,4 +63,17 @@ func (d *deal) Create(deal *models.Deal) (*models.Deal, error) {
 	}
 
 	return d.repo.Create(deal)
+}
+
+func (d *deal) Patch(deal *models.Deal) (*models.Deal, error) {
+	if deal.ID == 0 {
+		return nil, errors.New("deal cannot be empty")
+	}
+
+	return d.repo.Patch(deal)
+}
+
+func (d *deal) Delete(id int) error {
+	_, err := d.Patch(&models.Deal{ID: uint(id), Active: false})
+	return err
 }

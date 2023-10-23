@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -15,22 +16,25 @@ func NewProfile(
 	ss services.Stock,
 	ds services.Deal,
 	ts services.Transaction,
+	ses services.Security,
 	t *templates.Resolver) *Profile {
 	return &Profile{
-		es: es,
-		ss: ss,
-		ds: ds,
-		ts: ts,
-		t:  t,
+		es:  es,
+		ss:  ss,
+		ds:  ds,
+		ts:  ts,
+		ses: ses,
+		t:   t,
 	}
 }
 
 type Profile struct {
-	es services.Emitent
-	ss services.Stock
-	ds services.Deal
-	ts services.Transaction
-	t  *templates.Resolver
+	es  services.Emitent
+	ss  services.Stock
+	ds  services.Deal
+	ts  services.Transaction
+	ses services.Security
+	t   *templates.Resolver
 }
 
 type ProfileStrategy interface {
@@ -67,10 +71,18 @@ func (p *Profile) ServeProfilePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	securities, err := p.ses.Get()
+
+	if err != nil {
+		p.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
+		return
+	}
+
 	p.t.Execute(w, "profile.html", templates.ProfileArgs{
 		User:         profile,
 		Logined:      true,
 		Transactions: transactions,
+		Securities:   securities,
 	})
 }
 
@@ -110,6 +122,11 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		balance = profile.Balance - int(amount)
 	default:
 		balance = profile.Balance + int(amount)
+	}
+
+	if amount < 1 {
+		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Invalid money amount"})
+		return
 	}
 
 	if balance < 0 {
@@ -162,6 +179,8 @@ func (p *Profile) chooseUserStrategy(userCtx *middleware.UserCtx) (ProfileStrate
 		profileStrategy = p.es
 	case models.StockRole:
 		profileStrategy = p.ss
+	default:
+		return nil, errors.New("role does not exist")
 	}
 
 	return profileStrategy, nil

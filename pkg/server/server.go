@@ -17,9 +17,10 @@ type Server struct {
 }
 
 type Controllers struct {
-	Auth    *controllers.Auth
-	Profile *controllers.Profile
-	Deal    *controllers.Deal
+	Auth      *controllers.Auth
+	Profile   *controllers.Profile
+	Deal      *controllers.Deal
+	Inventory *controllers.Inventory
 }
 
 type HTTPServerArgs struct {
@@ -65,9 +66,13 @@ func (s *Server) setupRoutes() http.Handler {
 	})
 
 	r.Route("/v1", func(r chi.Router) {
-		r.With(s.AuthM.WithoutAuth()).Route("/auth", func(r chi.Router) {
-			r.Post("/sign-up", s.Auth.HandleSignUp)
-			r.Post("/sign-in", s.Auth.HandleSignIn)
+		r.Route("/auth", func(r chi.Router) {
+			r.With(s.AuthM.WithoutAuth()).Group(func(r chi.Router) {
+				r.Post("/sign-up", s.Auth.HandleSignUp)
+				r.Post("/sign-in", s.Auth.HandleSignIn)
+			})
+
+			r.With(s.AuthM.WithAuth()).Get("/log-out", s.Auth.HandleLogOut)
 		})
 
 		r.With(s.AuthM.WithAuth()).Group(func(r chi.Router) {
@@ -76,6 +81,11 @@ func (s *Server) setupRoutes() http.Handler {
 					r.Patch("/{id}", s.Profile.HandlePatch)
 					r.Get("/general-info/{id}", s.Profile.HandleGetGeneralInfo)
 				})
+			})
+
+			r.With(s.AuthM.WithSameUserID()).Route("/inventory", func(r chi.Router) {
+				r.Patch("/{userID}", s.Inventory.HandlePatch)
+				r.Get("/{userID}", s.Inventory.HandleGetInventoryInfo)
 			})
 
 			r.Route("/deals", func(r chi.Router) {

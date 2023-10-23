@@ -74,3 +74,17 @@ func (a *Auth) HandleSignUp(w http.ResponseWriter, r *http.Request) {
 
 	a.t.Execute(w, "sign-up-form", templates.SignUpArgs{Success: true})
 }
+
+func (a *Auth) HandleLogOut(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     middleware.SessionCookie,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+	})
+
+	http.Redirect(w, r, "/auth/sign-in", http.StatusMovedPermanently)
+}
