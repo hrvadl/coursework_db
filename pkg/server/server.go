@@ -91,12 +91,12 @@ func (s *Server) setupRoutes() http.Handler {
 			r.Route("/deals", func(r chi.Router) {
 				r.Get("/", s.Deal.HandleGet)
 				r.Post("/", s.Deal.HandleCreate)
-				r.Patch("/:id", func(w http.ResponseWriter, r *http.Request) {})
-				r.Delete("/:id", func(w http.ResponseWriter, r *http.Request) {})
+				r.Patch("/{id}", func(w http.ResponseWriter, r *http.Request) {})
+				r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {})
 			})
 
 			r.Route("/transactions", func(r chi.Router) {
-				r.Get("/:userID", func(w http.ResponseWriter, r *http.Request) {})
+				r.Get("/{userID}", func(w http.ResponseWriter, r *http.Request) {})
 			})
 		})
 
