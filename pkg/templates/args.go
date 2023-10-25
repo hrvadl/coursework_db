@@ -26,6 +26,10 @@ type DealArgs struct {
 	AmountHas int
 }
 
+type DealGeneralInfoArgs struct {
+	Deal *models.Deal
+}
+
 type ToastArgs struct {
 	Message string
 	Error   string

@@ -74,6 +74,6 @@ func (d *deal) Patch(deal *models.Deal) (*models.Deal, error) {
 }
 
 func (d *deal) Delete(id int) error {
-	_, err := d.Patch(&models.Deal{ID: uint(id), Active: false})
+	err := d.repo.Delete(id)
 	return err
 }

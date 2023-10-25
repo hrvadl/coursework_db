@@ -147,3 +147,121 @@ func (d *Deal) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	d.t.Execute(w, "deal-list", templates.DealListArgs{Deals: deals})
 }
+
+func (d *Deal) HandlePatch(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.Must(
+		middleware.GetUserCtx(r.Context()),
+	)
+
+	parts := strings.Split(r.URL.Path, "/")
+	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+
+	if err != nil {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	r.ParseForm()
+
+	amount, err := strconv.ParseInt(r.FormValue("amount"), 10, 64)
+
+	if err != nil {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "Invalid amount"})
+		return
+	}
+
+	price, err := strconv.ParseFloat(r.FormValue("price"), 64)
+
+	if err != nil {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "Invalid price"})
+		return
+	}
+
+	deal, err := d.ds.GetByID(int(dealID))
+
+	if err != nil {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "Deal does not exist"})
+		return
+	}
+
+	if deal.OwnerID != userCtx.ID {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "You can update only deals you own"})
+		return
+	}
+
+	_, err = d.ds.Patch(&models.Deal{
+		ID:     uint(dealID),
+		Amount: uint(amount),
+		Price:  price,
+	})
+
+	if err != nil {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "Failed to update the deal"})
+		return
+	}
+
+	w.Header().Set("HX-Trigger", "get-general-info")
+	d.t.Execute(w, "toast", templates.ToastArgs{Message: "Successfully updated the deal"})
+}
+
+func (d *Deal) HandleDelete(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.Must(
+		middleware.GetUserCtx(r.Context()),
+	)
+
+	parts := strings.Split(r.URL.Path, "/")
+	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+
+	if err != nil {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	deal, err := d.ds.GetByID(int(dealID))
+
+	if err != nil {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "Deal does not exist"})
+		return
+	}
+
+	if deal.OwnerID != userCtx.ID {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "You can delete only deals you own"})
+		return
+	}
+
+	if err = d.ds.Delete(int(dealID)); err != nil {
+		d.t.Execute(w, "toast", templates.ToastArgs{Error: "Failed to delete the deal"})
+		return
+	}
+
+	w.Header().Set("HX-Redirect", "/")
+	d.t.Execute(w, "toast", templates.ToastArgs{Message: "Successfully deleted the deal"})
+}
+
+func (d *Deal) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.Must(
+		middleware.GetUserCtx(r.Context()),
+	)
+
+	parts := strings.Split(r.URL.Path, "/")
+	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+
+	if err != nil {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	deal, err := d.ds.GetByID(int(dealID))
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if deal.OwnerID != userCtx.ID {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	d.t.Execute(w, "deal-general-info", templates.DealGeneralInfoArgs{Deal: deal})
+}

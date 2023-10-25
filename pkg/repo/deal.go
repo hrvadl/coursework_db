@@ -23,7 +23,11 @@ type deal struct {
 
 func (d *deal) GetByID(id int) (*models.Deal, error) {
 	var deal models.Deal
-	err := d.db.Model(&models.Deal{}).Preload("Owner").Preload("Security").First(&deal, id).Error
+	err := d.db.Model(&models.Deal{}).
+		Where(&models.Deal{Active: true}).
+		Preload("Owner").
+		Preload("Security").
+		First(&deal, id).Error
 
 	if err != nil {
 		return nil, err
@@ -34,7 +38,10 @@ func (d *deal) GetByID(id int) (*models.Deal, error) {
 
 func (d *deal) Get() ([]models.Deal, error) {
 	var deals []models.Deal
-	res := d.db.Model(&models.Deal{}).Preload("Security").Find(&deals)
+	res := d.db.Model(&models.Deal{}).
+		Where(&models.Deal{Active: true}).
+		Preload("Security").
+		Find(&deals)
 
 	if err := res.Error; err != nil {
 		return nil, err
@@ -60,6 +67,9 @@ func (d *deal) Create(deal *models.Deal) (*models.Deal, error) {
 }
 
 func (d *deal) Delete(id int) error {
-	_, err := d.Patch(&models.Deal{ID: uint(id), Active: false})
-	return err
+	res := d.db.Model(&models.Deal{}).
+		Where("id = ?", id).
+		Update("active", false)
+
+	return res.Error
 }

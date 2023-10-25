@@ -91,8 +91,9 @@ func (s *Server) setupRoutes() http.Handler {
 			r.Route("/deals", func(r chi.Router) {
 				r.Get("/", s.Deal.HandleGet)
 				r.Post("/", s.Deal.HandleCreate)
-				r.Patch("/{id}", func(w http.ResponseWriter, r *http.Request) {})
-				r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {})
+				r.Get("/{id}", s.Deal.HandleGetGeneralInfo)
+				r.Patch("/{id}", s.Deal.HandlePatch)
+				r.Delete("/{id}", s.Deal.HandleDelete)
 			})
 
 			r.Route("/transactions", func(r chi.Router) {

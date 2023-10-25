@@ -1,0 +1,13 @@
+{{ define "deal-general-info" }}
+<section
+  hx-trigger="get-general-info from:body"
+  hx-get="/v1/deals/{{ .Deal.ID }}"
+  class="mb-4 flex flex-col gap-2"
+>
+  <h2 class="text-2xl font-semibold mb-3">Deal details:</h2>
+  <span class="text-lg">Security: {{ .Deal.Security.Name }} </span>
+  <span class="text-lg">Security ID: {{ .Deal.Security.ID }} </span>
+  <span class="text-lg">Amount: {{ .Deal.Amount }} </span>
+  <span class="text-lg">Price for one: {{ .Deal.Price }} </span>
+</section>
+{{ end }}
