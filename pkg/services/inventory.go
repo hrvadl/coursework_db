@@ -11,7 +11,8 @@ type Inventory interface {
 	GetByID(id int) (*models.InventoryItem, error)
 	GetUserInventory(userID int) ([]models.InventoryItem, error)
 	GetUserInventoryBySecurityID(userID int, securityID int) (*models.InventoryItem, error)
-	CreateOrUpdate(item *models.InventoryItem) (*models.InventoryItem, error)
+	Withdraw(ownerID, securityID, amount uint) (*models.InventoryItem, error)
+	Add(ownerID, securityID, amount uint) (*models.InventoryItem, error)
 	Patch(item *models.InventoryItem) (*models.InventoryItem, error)
 	Delete(id int) error
 }
@@ -40,12 +41,54 @@ func (i *inventory) GetUserInventoryBySecurityID(userID int, securityID int) (*m
 	return i.repo.GetUserInventoryBySecurityID(userID, securityID)
 }
 
-func (i *inventory) CreateOrUpdate(item *models.InventoryItem) (*models.InventoryItem, error) {
-	if err := i.repo.Save(item); err != nil {
+func (i *inventory) Withdraw(ownerID, securityID, amount uint) (*models.InventoryItem, error) {
+	if amount < 1 {
+		return nil, errors.New("amount must be greater than zero")
+	}
+
+	inventory, err := i.GetUserInventoryBySecurityID(int(ownerID), int(securityID))
+
+	if err != nil {
 		return nil, err
 	}
 
-	return item, nil
+	if inventory == nil {
+		return nil, errors.New("you have nothing to withdraw")
+	}
+
+	if int(inventory.Amount)-int(amount) < 0 {
+		return nil, errors.New("total amount must be greater than zero")
+	}
+
+	inventory.Amount -= amount
+
+	if err := i.repo.Save(inventory); err != nil {
+		return nil, err
+	}
+
+	return inventory, nil
+}
+
+func (i *inventory) Add(ownerID, securityID, amount uint) (*models.InventoryItem, error) {
+	if amount < 1 {
+		return nil, errors.New("amount must be greater than zero")
+	}
+
+	inventory, _ := i.GetUserInventoryBySecurityID(int(ownerID), int(securityID))
+
+	if inventory == nil {
+		inventory = &models.InventoryItem{}
+	}
+
+	inventory.OwnerID = ownerID
+	inventory.Amount += amount
+	inventory.SecurityID = securityID
+
+	if err := i.repo.Save(inventory); err != nil {
+		return nil, err
+	}
+
+	return inventory, nil
 }
 
 func (i *inventory) Patch(item *models.InventoryItem) (*models.InventoryItem, error) {

@@ -44,7 +44,7 @@ func (t *Transaction) HandleMakeTransaction(w http.ResponseWriter, r *http.Reque
 	)
 
 	parts := strings.Split(r.URL.Path, "/")
-	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+	dealID, err := strconv.ParseInt(parts[len(parts)-2], 10, 64)
 
 	if err != nil {
 		t.tr.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
@@ -67,9 +67,3 @@ func (t *Transaction) HandleMakeTransaction(w http.ResponseWriter, r *http.Reque
 	}
 
 }
-
-func (t *Transaction) handleBuying(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (t *Transaction) handleSelling(w http.ResponseWriter, r *http.Request) {}

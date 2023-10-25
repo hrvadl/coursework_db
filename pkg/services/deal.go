@@ -20,11 +20,13 @@ func NewDeal(
 	repo repo.Deal,
 	irepo repo.Inventory,
 	urepo repo.User,
+	trepo repo.Transaction,
 ) Deal {
 	return &deal{
 		repo:  repo,
 		irepo: irepo,
 		urepo: urepo,
+		trepo: trepo,
 	}
 }
 
@@ -32,6 +34,7 @@ type deal struct {
 	repo  repo.Deal
 	irepo repo.Inventory
 	urepo repo.User
+	trepo repo.Transaction
 }
 
 func (d *deal) GetByID(id int) (*models.Deal, error) {
@@ -77,6 +80,10 @@ func (d *deal) Patch(deal *models.Deal) (*models.Deal, error) {
 		return nil, errors.New("deal cannot be empty")
 	}
 
+	if deal.Price < 0 {
+		return nil, errors.New("deal cannot have a negative or zero price")
+	}
+
 	return d.repo.Patch(deal)
 }
 
@@ -100,14 +107,58 @@ func (d *deal) MakeTransaction(authorID, dealID, amount int) error {
 		return errors.New("cannot make transaction with yourself")
 	}
 
-	if amount < 0 {
-		return errors.New("amount must be greater than zero")
+	if amount < 0 || amount > int(deal.Amount) {
+		return errors.New("invalid amount")
 	}
 
-	switch deal.Sell {
+	user, err := d.urepo.GetByID(authorID)
+
+	if err != nil {
+		return err
+	}
+
+	if deal.Sell {
+		return d.buy(user, deal, amount)
+	}
+
+	return d.sell(user, deal, amount)
+}
+
+func (d *deal) buy(author *models.User, deal *models.Deal, amount int) error {
+	if deal.Price*float64(amount) > float64(author.Balance) {
+		return errors.New("not enough balance")
+	}
+
+	_, err := d.trepo.Add(&models.Transaction{
+		Buyer:   author,
+		Seller:  deal.Owner,
+		Subject: deal,
+		Amount:  uint(amount),
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (d *deal) buy()
+func (d *deal) sell(author *models.User, deal *models.Deal, amount int) error {
+	if deal.Owner.Balance < amount*int(deal.Price) {
+		d.Delete(int(deal.ID))
+		return errors.New("sorry, but buyer does not have enough balance")
+	}
+
+	_, err := d.trepo.Add(&models.Transaction{
+		Buyer:   deal.Owner,
+		Seller:  author,
+		Subject: deal,
+		Amount:  uint(amount),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

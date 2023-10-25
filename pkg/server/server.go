@@ -17,10 +17,11 @@ type Server struct {
 }
 
 type Controllers struct {
-	Auth      *controllers.Auth
-	Profile   *controllers.Profile
-	Deal      *controllers.Deal
-	Inventory *controllers.Inventory
+	Auth        *controllers.Auth
+	Profile     *controllers.Profile
+	Deal        *controllers.Deal
+	Inventory   *controllers.Inventory
+	Transaction *controllers.Transaction
 }
 
 type HTTPServerArgs struct {
@@ -93,6 +94,7 @@ func (s *Server) setupRoutes() http.Handler {
 				r.Post("/", s.Deal.HandleCreate)
 				r.Get("/{id}", s.Deal.HandleGetGeneralInfo)
 				r.Patch("/{id}", s.Deal.HandlePatch)
+				r.Patch("/{id}/transaction", s.Transaction.HandleMakeTransaction)
 				r.Delete("/{id}", s.Deal.HandleDelete)
 			})
 

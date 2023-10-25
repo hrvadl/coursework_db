@@ -44,7 +44,6 @@ func (d *Deal) ServeDealsPage(w http.ResponseWriter, r *http.Request) {
 
 	var role string
 	ctx, _ := middleware.GetUserCtx(r.Context())
-
 	if ctx == nil {
 		role = ""
 	} else {
@@ -130,15 +129,13 @@ func (d *Deal) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sell := r.FormValue("type") == "sell"
-
 	dto := &models.Deal{
 		OwnerID:    ctx.ID,
 		SecurityID: uint(securityID),
 		Amount:     uint(amount),
 		Price:      price,
 		Active:     true,
-		Sell:       sell,
+		Sell:       r.FormValue("type") == "sell",
 	}
 
 	if _, err := d.ds.Create(dto); err != nil {

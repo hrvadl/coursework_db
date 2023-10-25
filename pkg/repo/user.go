@@ -25,7 +25,7 @@ func NewStock(db *gorm.DB) User {
 func (r *stock) Get() ([]models.User, error) {
 	var users []models.User
 
-	if tx := r.db.Where(&models.User{Role: models.StockRole}).Find(&users); tx.Error != nil {
+	if tx := r.db.Where(&models.User{}).Find(&users); tx.Error != nil {
 		return nil, tx.Error
 	}
 
@@ -35,9 +35,11 @@ func (r *stock) Get() ([]models.User, error) {
 func (r *stock) GetByID(id int) (*models.User, error) {
 	var user models.User
 	res := r.db.Model(&models.User{}).
-		Preload(clause.Associations).
+		Preload("Deals", "active = ?", true).
+		Preload("Deals.Security").
 		Preload("Inventory.Security").
-		Where(&models.User{ID: uint(id), Role: models.StockRole}).
+		Preload(clause.Associations).
+		Where(&models.User{ID: uint(id)}).
 		First(&user)
 
 	if res.Error != nil {
@@ -49,7 +51,7 @@ func (r *stock) GetByID(id int) (*models.User, error) {
 
 func (r *stock) GetByEmail(email string) (*models.User, error) {
 	var user models.User
-	res := r.db.Where(&models.User{Email: email, Role: models.StockRole}).First(&user)
+	res := r.db.Where(&models.User{Email: email}).First(&user)
 
 	if res.Error != nil {
 		return nil, res.Error

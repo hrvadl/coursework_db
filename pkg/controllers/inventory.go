@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/hrvadl/coursework_db/pkg/middleware"
-	"github.com/hrvadl/coursework_db/pkg/models"
 	"github.com/hrvadl/coursework_db/pkg/services"
 	"github.com/hrvadl/coursework_db/pkg/templates"
 )
@@ -34,7 +33,6 @@ func (i *Inventory) HandlePatch(w http.ResponseWriter, r *http.Request) {
 	)
 
 	r.ParseForm()
-
 	securityID, err := strconv.ParseInt(r.FormValue("securityID"), 10, 64)
 
 	if err != nil {
@@ -49,29 +47,15 @@ func (i *Inventory) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if amount < 1 {
-		i.tr.Execute(w, "toast", templates.ToastArgs{Error: "Invalid money amount"})
-		return
-	}
-
-	inventory, _ := i.is.GetUserInventoryBySecurityID(int(ctx.ID), int(securityID))
-
-	if inventory == nil {
-		inventory = &models.InventoryItem{}
-	}
-
-	inventory.SecurityID = uint(securityID)
-	inventory.OwnerID = ctx.ID
-
 	withdraw, _ := strconv.ParseBool(r.FormValue("withdraw"))
 	switch withdraw {
 	case true:
-		inventory.Amount -= uint(amount)
+		_, err = i.is.Withdraw(ctx.ID, uint(securityID), uint(amount))
 	case false:
-		inventory.Amount += uint(amount)
+		_, err = i.is.Add(ctx.ID, uint(securityID), uint(amount))
 	}
 
-	if _, err := i.is.CreateOrUpdate(inventory); err != nil {
+	if err != nil {
 		i.tr.Execute(w, "toast", templates.ToastArgs{Error: "Something went wrong"})
 		return
 	}

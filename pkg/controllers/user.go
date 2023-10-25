@@ -80,15 +80,7 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		middleware.GetUserCtx(r.Context()),
 	)
 
-	profile, err := p.us.GetByID(int(userCtx.ID))
-
-	if err != nil {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "User not found"})
-		return
-	}
-
 	r.ParseForm()
-
 	amount, err := strconv.ParseInt(r.FormValue("amount"), 10, 64)
 
 	if err != nil {
@@ -98,30 +90,14 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 
 	isWithdraw, _ := strconv.ParseBool(r.FormValue("withdraw"))
 
-	var balance int
 	switch isWithdraw {
 	case true:
-		balance = profile.Balance - int(amount)
+		err = p.us.WithdrawMoney(int(userCtx.ID), int(amount))
 	default:
-		balance = profile.Balance + int(amount)
+		err = p.us.AddMoney(int(userCtx.ID), int(amount))
 	}
 
-	if amount < 1 {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Invalid money amount"})
-		return
-	}
-
-	if balance < 0 {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Invalid money amount"})
-		return
-	}
-
-	dto := &models.User{
-		ID:      uint(userCtx.ID),
-		Balance: balance,
-	}
-
-	if _, err := p.us.Patch(dto); err != nil {
+	if err != nil {
 		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Cannot update the user"})
 		return
 	}
