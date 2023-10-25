@@ -8,7 +8,8 @@ type SignUpArgs struct {
 }
 
 type GenericErrorArgs struct {
-	Error string
+	Logined bool
+	Error   string
 }
 
 type DealsArgs struct {

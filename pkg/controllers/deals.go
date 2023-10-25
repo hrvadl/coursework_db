@@ -31,14 +31,14 @@ func (d *Deal) ServeDealsPage(w http.ResponseWriter, r *http.Request) {
 	deals, err := d.ds.Get()
 
 	if err != nil {
-		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
+		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{Logined: true})
 		return
 	}
 
 	securities, err := d.ss.Get()
 
 	if err != nil {
-		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
+		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{Logined: true})
 		return
 	}
 
@@ -83,16 +83,24 @@ func (d *Deal) ServeDealPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	has, err := d.is.GetUserInventory(int(ctx.ID))
+	has, _ := d.is.GetUserInventoryBySecurityID(int(ctx.ID), int(deal.SecurityID))
 	if err != nil {
 		d.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
 		return
 	}
 
+	var amountHas int
+	switch has {
+	case nil:
+		amountHas = 0
+	default:
+		amountHas = int(has.Amount)
+	}
+
 	d.t.Execute(w, "deal.html", templates.DealArgs{
 		Deal:      deal,
 		Logined:   true,
-		AmountHas: len(has),
+		AmountHas: amountHas,
 		IsOwner:   ctx.ID == deal.OwnerID,
 	})
 }

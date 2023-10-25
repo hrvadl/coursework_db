@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -13,22 +12,19 @@ import (
 
 func NewInventory(
 	is services.Inventory,
-	es services.Emitent,
-	ss services.Stock,
+	us services.User,
 	tr *templates.Resolver,
 ) *Inventory {
 	return &Inventory{
 		is: is,
 		tr: tr,
-		ss: ss,
-		es: es,
+		us: us,
 	}
 }
 
 type Inventory struct {
 	is services.Inventory
-	es services.Emitent
-	ss services.Stock
+	us services.User
 	tr *templates.Resolver
 }
 
@@ -89,14 +85,7 @@ func (i *Inventory) HandleGetInventoryInfo(w http.ResponseWriter, r *http.Reques
 		middleware.GetUserCtx(r.Context()),
 	)
 
-	strategy, err := i.chooseUserStrategy(ctx)
-
-	if err != nil {
-		i.tr.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
-		return
-	}
-
-	user, err := strategy.GetByID(int(ctx.ID))
+	user, err := i.us.GetByID(int(ctx.ID))
 
 	if err != nil {
 		i.tr.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
@@ -106,18 +95,4 @@ func (i *Inventory) HandleGetInventoryInfo(w http.ResponseWriter, r *http.Reques
 	i.tr.Execute(w, "inventory", templates.InventoryArgs{
 		User: user,
 	})
-}
-
-func (i *Inventory) chooseUserStrategy(userCtx *middleware.UserCtx) (ProfileStrategy, error) {
-	var profileStrategy ProfileStrategy
-	switch userCtx.Role {
-	case models.EmitentRole:
-		profileStrategy = i.es
-	case models.StockRole:
-		profileStrategy = i.ss
-	default:
-		return nil, errors.New("role does not exist")
-	}
-
-	return profileStrategy, nil
 }

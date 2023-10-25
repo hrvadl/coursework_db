@@ -52,7 +52,7 @@
           </section>
           {{ template "deal-general-info" . }}
         </div>
-        {{ if and (and .Logined (gt .AmountHas 0)) not .IsOwner }}
+        {{ if and (and .Logined (gt .AmountHas 0)) (not .IsOwner) }}
         <div>
           <button
             id="open-dialog"
@@ -63,7 +63,7 @@
           </button>
           <dialog id="deal-dialog" class="p-6">
             <form
-              hx-patch="/v1/deals"
+              hx-patch="/v1/deals/{{ .Deal.ID }}/transaction"
               hx-target="#toast"
               hx-trigger="submit"
               hx-swap="outerHTML"
@@ -78,11 +78,12 @@
                 id="amount"
                 name="amount"
                 class="w-full p-2 border border-gray-300 rounded"
+                min="1"
+                max="{{ .Deal.Amount }}"
+                required
               />
               <div class="flex justify-between mt-4">
                 <button
-                  formmethod="dialog"
-                  type="submit"
                   class="close-dialog bg-red-500 text-white py-2 px-4 rounded hover:bg-blue-600"
                   onclick="closeDealDialog()"
                 >
@@ -93,7 +94,7 @@
                   class="close-dialog bg-green-500 text-white py-2 px-4 rounded hover:bg-blue-600"
                   onclick="closeDealDialog()"
                 >
-                  Create
+                  {{ if .Deal.Sell }} Sell {{ else }} Buy {{ end }}
                 </button>
               </div>
             </form>

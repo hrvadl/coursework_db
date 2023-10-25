@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,15 +11,13 @@ import (
 )
 
 func NewProfile(
-	es services.Emitent,
-	ss services.Stock,
+	us services.User,
 	ds services.Deal,
 	ts services.Transaction,
 	ses services.Security,
 	t *templates.Resolver) *Profile {
 	return &Profile{
-		es:  es,
-		ss:  ss,
+		us:  us,
 		ds:  ds,
 		ts:  ts,
 		ses: ses,
@@ -29,8 +26,7 @@ func NewProfile(
 }
 
 type Profile struct {
-	es  services.Emitent
-	ss  services.Stock
+	us  services.User
 	ds  services.Deal
 	ts  services.Transaction
 	ses services.Security
@@ -50,14 +46,7 @@ func (p *Profile) ServeProfilePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profileStrategy, err := p.chooseUserStrategy(userCtx)
-
-	if err != nil {
-		p.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
-		return
-	}
-
-	profile, err := profileStrategy.GetByID(int(userCtx.ID))
+	profile, err := p.us.GetByID(int(userCtx.ID))
 
 	if err != nil {
 		p.t.Execute(w, "generic-error.html", templates.GenericErrorArgs{})
@@ -91,14 +80,7 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		middleware.GetUserCtx(r.Context()),
 	)
 
-	profileStrategy, err := p.chooseUserStrategy(userCtx)
-
-	if err != nil {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Something went wrong"})
-		return
-	}
-
-	profile, err := profileStrategy.GetByID(int(userCtx.ID))
+	profile, err := p.us.GetByID(int(userCtx.ID))
 
 	if err != nil {
 		p.t.Execute(w, "toast", templates.ToastArgs{Error: "User not found"})
@@ -139,7 +121,7 @@ func (p *Profile) HandlePatch(w http.ResponseWriter, r *http.Request) {
 		Balance: balance,
 	}
 
-	if _, err := profileStrategy.Patch(dto); err != nil {
+	if _, err := p.us.Patch(dto); err != nil {
 		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Cannot update the user"})
 		return
 	}
@@ -153,14 +135,7 @@ func (p *Profile) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
 		middleware.GetUserCtx(r.Context()),
 	)
 
-	profileStrategy, err := p.chooseUserStrategy(userCtx)
-
-	if err != nil {
-		p.t.Execute(w, "toast", templates.ToastArgs{Error: "Something went wrong"})
-		return
-	}
-
-	profile, err := profileStrategy.GetByID(int(userCtx.ID))
+	profile, err := p.us.GetByID(int(userCtx.ID))
 
 	if err != nil {
 		p.t.Execute(w, "toast", templates.ToastArgs{Error: "User not found"})
@@ -170,18 +145,4 @@ func (p *Profile) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
 	p.t.Execute(w, "general-info", templates.GeneralProfileInfoArgs{
 		User: profile,
 	})
-}
-
-func (p *Profile) chooseUserStrategy(userCtx *middleware.UserCtx) (ProfileStrategy, error) {
-	var profileStrategy ProfileStrategy
-	switch userCtx.Role {
-	case models.EmitentRole:
-		profileStrategy = p.es
-	case models.StockRole:
-		profileStrategy = p.ss
-	default:
-		return nil, errors.New("role does not exist")
-	}
-
-	return profileStrategy, nil
 }

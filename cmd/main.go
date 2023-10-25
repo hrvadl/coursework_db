@@ -26,8 +26,7 @@ func main() {
 	db := db.Must(db.New(cfg.DSN))
 
 	logger.Info("Initializing the repositories...")
-	stockRepo := repo.NewStock(db)
-	emitentRepo := repo.NewEmitent(db)
+	userRepo := repo.NewStock(db)
 	sessionRepo := repo.NewSession(db)
 	dealRepo := repo.NewDeal(db)
 	securityRepo := repo.NewSecurity(db)
@@ -40,22 +39,19 @@ func main() {
 	corsM := middleware.NewCors()
 
 	logger.Info("Initializing the core services...")
-	inventoryService := services.NewInventory(inventoryRepo, stockRepo, emitentRepo)
-	stockService := services.NewStock(stockRepo, cryptor)
-	dealService := services.NewDeal(dealRepo, inventoryRepo)
-	emitentService := services.NewEmitent(emitentRepo, cryptor)
+	inventoryService := services.NewInventory(inventoryRepo, userRepo)
+	stockService := services.NewStock(userRepo, cryptor)
+	dealService := services.NewDeal(dealRepo, inventoryRepo, userRepo)
 	transactionService := services.NewTransaction(transactionRepo)
 	securityService := services.NewSecurity(securityRepo)
 	authService := services.NewAuth(
-		stockRepo,
-		emitentRepo,
+		userRepo,
 		sessionRepo,
 		cryptor,
 	)
 
 	authController := controllers.NewAuth(authService, tr)
 	profileController := controllers.NewProfile(
-		emitentService,
 		stockService,
 		dealService,
 		transactionService,
@@ -70,7 +66,6 @@ func main() {
 	)
 	inventoryController := controllers.NewInventory(
 		inventoryService,
-		emitentService,
 		stockService,
 		tr,
 	)

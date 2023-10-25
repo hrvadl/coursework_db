@@ -16,18 +16,16 @@ type Inventory interface {
 	Delete(id int) error
 }
 
-func NewInventory(repo repo.Inventory, sr repo.Stock, er repo.Emitent) Inventory {
+func NewInventory(repo repo.Inventory, ur repo.User) Inventory {
 	return &inventory{
-		repo:        repo,
-		stockRepo:   sr,
-		emitentRepo: er,
+		repo: repo,
+		user: ur,
 	}
 }
 
 type inventory struct {
-	repo        repo.Inventory
-	stockRepo   repo.Stock
-	emitentRepo repo.Emitent
+	repo repo.Inventory
+	user repo.User
 }
 
 func (i *inventory) GetByID(id int) (*models.InventoryItem, error) {

@@ -8,6 +8,7 @@ import (
 )
 
 type Deal interface {
+	MakeTransaction(authorID, dealID, amount int) error
 	GetByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
 	Create(d *models.Deal) (*models.Deal, error)
@@ -15,16 +16,22 @@ type Deal interface {
 	Delete(d int) error
 }
 
-func NewDeal(repo repo.Deal, irepo repo.Inventory) Deal {
+func NewDeal(
+	repo repo.Deal,
+	irepo repo.Inventory,
+	urepo repo.User,
+) Deal {
 	return &deal{
 		repo:  repo,
 		irepo: irepo,
+		urepo: urepo,
 	}
 }
 
 type deal struct {
 	repo  repo.Deal
 	irepo repo.Inventory
+	urepo repo.User
 }
 
 func (d *deal) GetByID(id int) (*models.Deal, error) {
@@ -77,3 +84,30 @@ func (d *deal) Delete(id int) error {
 	err := d.repo.Delete(id)
 	return err
 }
+
+func (d *deal) MakeTransaction(authorID, dealID, amount int) error {
+	deal, err := d.GetByID(dealID)
+
+	if err != nil {
+		return err
+	}
+
+	if !deal.Active {
+		return errors.New("deal is not active")
+	}
+
+	if authorID == int(deal.OwnerID) {
+		return errors.New("cannot make transaction with yourself")
+	}
+
+	if amount < 0 {
+		return errors.New("amount must be greater than zero")
+	}
+
+	switch deal.Sell {
+	}
+
+	return nil
+}
+
+func (d *deal) buy()

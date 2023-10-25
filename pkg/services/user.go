@@ -5,32 +5,32 @@ import (
 	"github.com/hrvadl/coursework_db/pkg/repo"
 )
 
-type Emitent interface {
+type User interface {
 	GetByID(id int) (*models.User, error)
 	Get() ([]models.User, error)
 	Patch(user *models.User) (*models.User, error)
 }
 
-type emitent struct {
-	repo   repo.Emitent
+type stock struct {
+	repo   repo.User
 	crypto Cryptor
 }
 
-func NewEmitent(repo repo.Emitent, crypto Cryptor) Emitent {
-	return &emitent{
+func NewStock(repo repo.User, crypto Cryptor) User {
+	return &stock{
 		repo:   repo,
 		crypto: crypto,
 	}
 }
 
-func (s *emitent) Get() ([]models.User, error) {
+func (s *stock) Get() ([]models.User, error) {
 	return s.repo.Get()
 }
 
-func (s *emitent) GetByID(id int) (*models.User, error) {
+func (s *stock) GetByID(id int) (*models.User, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *emitent) Patch(user *models.User) (*models.User, error) {
+func (s *stock) Patch(user *models.User) (*models.User, error) {
 	return s.repo.Patch(user)
 }

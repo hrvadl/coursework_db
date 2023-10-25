@@ -35,7 +35,7 @@ func (i *inventory) GetByID(id int) (*models.InventoryItem, error) {
 
 func (i *inventory) GetByUserID(userID int) ([]models.InventoryItem, error) {
 	var items []models.InventoryItem
-	err := i.db.Where(&models.InventoryItem{OwnerID: uint(userID)}).Error
+	err := i.db.Where(&models.InventoryItem{OwnerID: uint(userID)}).Find(&items).Error
 
 	if err != nil {
 		return nil, err

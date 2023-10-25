@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type Stock interface {
+type User interface {
 	Get() ([]models.User, error)
 	GetByID(id int) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
@@ -18,7 +18,7 @@ type stock struct {
 	db *gorm.DB
 }
 
-func NewStock(db *gorm.DB) Stock {
+func NewStock(db *gorm.DB) User {
 	return &stock{db}
 }
 
