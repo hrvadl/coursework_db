@@ -66,4 +66,5 @@ func (t *Transaction) HandleMakeTransaction(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	w.Header().Set("HX-Trigger", "get-general-info")
 }

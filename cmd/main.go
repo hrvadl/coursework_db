@@ -31,7 +31,7 @@ func main() {
 	dealRepo := repo.NewDeal(db)
 	securityRepo := repo.NewSecurity(db)
 	inventoryRepo := repo.NewInventory(db)
-	transactionRepo := repo.NewTransaction(db)
+	transactionRepo := repo.NewTransaction(db, inventoryRepo)
 
 	logger.Info("Initializing the middlewares...")
 	authM := middleware.NewAuth(sessionRepo, tr)

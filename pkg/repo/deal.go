@@ -6,6 +6,7 @@ import (
 )
 
 type Deal interface {
+	GetAllByID(id int) (*models.Deal, error)
 	GetByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
 	Create(deal *models.Deal) (*models.Deal, error)
@@ -25,6 +26,20 @@ func (d *deal) GetByID(id int) (*models.Deal, error) {
 	var deal models.Deal
 	err := d.db.Model(&models.Deal{}).
 		Where(&models.Deal{Active: true}).
+		Preload("Owner").
+		Preload("Security").
+		First(&deal, id).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
+}
+
+func (d *deal) GetAllByID(id int) (*models.Deal, error) {
+	var deal models.Deal
+	err := d.db.Model(&models.Deal{}).
 		Preload("Owner").
 		Preload("Security").
 		First(&deal, id).Error

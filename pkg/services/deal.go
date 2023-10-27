@@ -10,6 +10,7 @@ import (
 type Deal interface {
 	MakeTransaction(authorID, dealID, amount int) error
 	GetByID(id int) (*models.Deal, error)
+	GetAllByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
 	Create(d *models.Deal) (*models.Deal, error)
 	Patch(d *models.Deal) (*models.Deal, error)
@@ -41,6 +42,10 @@ func (d *deal) GetByID(id int) (*models.Deal, error) {
 	return d.repo.GetByID(id)
 }
 
+func (d *deal) GetAllByID(id int) (*models.Deal, error) {
+	return d.repo.GetAllByID(id)
+}
+
 func (d *deal) Get() ([]models.Deal, error) {
 	return d.repo.Get()
 }
@@ -70,6 +75,16 @@ func (d *deal) Create(deal *models.Deal) (*models.Deal, error) {
 
 	if deal.Price <= 0 {
 		return nil, errors.New("cannot create a deal with a negative or zero amount")
+	}
+
+	user, err := d.urepo.GetByID(int(deal.OwnerID))
+
+	if err != nil {
+		return nil, errors.New("user does not exist")
+	}
+
+	if (float64(user.Balance) < float64(deal.Amount)*deal.Price) && !deal.Sell {
+		return nil, errors.New("cannot create a buy deal, you don't have enough balance")
 	}
 
 	return d.repo.Create(deal)

@@ -244,10 +244,6 @@ func (d *Deal) HandleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *Deal) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
-	userCtx := middleware.Must(
-		middleware.GetUserCtx(r.Context()),
-	)
-
 	parts := strings.Split(r.URL.Path, "/")
 	dealID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
 
@@ -256,15 +252,10 @@ func (d *Deal) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deal, err := d.ds.GetByID(int(dealID))
+	deal, err := d.ds.GetAllByID(int(dealID))
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	if deal.OwnerID != userCtx.ID {
-		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 

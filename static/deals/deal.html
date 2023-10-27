@@ -52,7 +52,8 @@
           </section>
           {{ template "deal-general-info" . }}
         </div>
-        {{ if and (and .Logined (gt .AmountHas 0)) (not .IsOwner) }}
+        {{ if and (and .Logined (not .IsOwner)) (or .Deal.Sell (and (not
+        .Deal.Sell) (gt .AmountHas 0) )) }}
         <div>
           <button
             id="open-dialog"
