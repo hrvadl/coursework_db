@@ -43,7 +43,7 @@ func NewHTTP(h *HTTPServerArgs) *Server {
 
 func (s *Server) ListenAndServe(port string) error {
 	r := s.setupRoutes()
-	return http.ListenAndServe(fmt.Sprintf(":%v", port), r)
+	return http.ListenAndServe(fmt.Sprintf("localhost:%v", port), r)
 }
 
 func (s *Server) setupRoutes() http.Handler {
