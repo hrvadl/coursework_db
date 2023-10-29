@@ -20,9 +20,12 @@ services:
     env_file:
       - .prod.env
     volumes:
-      - /usr/local/mysql:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
 
 networks:
   stocknet:
     name: stocknet
     driver: bridge
+
+volumes:
+  mysql-data:

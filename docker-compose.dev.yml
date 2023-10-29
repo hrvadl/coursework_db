@@ -7,4 +7,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - /usr/local/mysql:/var/lib/mysql
+      - mysql-dev-data:/var/lib/mysql
+
+volumes:
+  mysql-dev-data:
