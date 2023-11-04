@@ -21,10 +21,12 @@ type Auth struct {
 }
 
 func (a *Auth) ServeSignInPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	a.t.Execute(w, "sign-in.html", nil)
 }
 
 func (a *Auth) ServeSignUpPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	a.t.Execute(w, "sign-up.html", nil)
 }
 

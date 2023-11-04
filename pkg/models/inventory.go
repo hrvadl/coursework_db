@@ -1,9 +1,9 @@
 package models
 
 type InventoryItem struct {
-	ID         uint `gorm:"primaryKey,autoIncrement"`
+	ID         uint `gorm:"constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	SecurityID uint
-	Security   Security
+	Security   Security `gorm:"constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	OwnerID    uint
 	Amount     uint
 }

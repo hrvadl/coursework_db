@@ -9,4 +9,6 @@ FROM alpine:latest as final
 WORKDIR /app
 COPY --from=builder /app/stock .
 COPY --from=builder /app/static /static
+COPY --from=builder /app/seed.sql /
+EXPOSE 80
 CMD ["./stock"]

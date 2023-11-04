@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"net/http"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -39,11 +40,21 @@ type HTTPLogger struct {
 	log *zap.SugaredLogger
 }
 
+func isHTMLResponse(contentType string) bool {
+	return strings.Contains(contentType, "text/html")
+}
+
 func (h *HTTPLogger) WithHTTPLogger() HTTPMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			writerWrapper := newResponseWriterLogger(w)
 			next.ServeHTTP(writerWrapper, r)
+
+			if isHTMLResponse(r.Header.Get("Accept")) {
+				h.log.Debugf("[%v] %v %v %v", r.Method, r.URL.String(), writerWrapper.code, "HTML")
+				return
+			}
+
 			h.log.Debugf("[%v] %v %v %v", r.Method, r.URL.String(), writerWrapper.code, writerWrapper.body.String())
 		})
 	}

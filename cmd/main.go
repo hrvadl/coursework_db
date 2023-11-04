@@ -14,7 +14,9 @@ import (
 )
 
 func main() {
-	logger := zap.Must(zap.NewDevelopment()).Sugar()
+	c := zap.NewDevelopmentConfig()
+	c.DisableStacktrace = true
+	logger := zap.Must(c.Build()).Sugar()
 	logger.Info("Started initializing server...")
 
 	logger.Info("Initializing the helper services...")
@@ -39,7 +41,7 @@ func main() {
 	corsM := middleware.NewCors()
 
 	logger.Info("Initializing the core services...")
-	inventoryService := services.NewInventory(inventoryRepo, userRepo)
+	inventoryService := services.NewInventory(inventoryRepo, userRepo, dealRepo)
 	userService := services.NewStock(userRepo, cryptor)
 	dealService := services.NewDeal(dealRepo, inventoryRepo, userRepo, transactionRepo)
 	transactionService := services.NewTransaction(transactionRepo)

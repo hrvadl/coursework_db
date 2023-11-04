@@ -17,16 +17,18 @@ type Inventory interface {
 	Delete(id int) error
 }
 
-func NewInventory(repo repo.Inventory, ur repo.User) Inventory {
+func NewInventory(repo repo.Inventory, ur repo.User, dr repo.Deal) Inventory {
 	return &inventory{
 		repo: repo,
 		user: ur,
+		deal: dr,
 	}
 }
 
 type inventory struct {
 	repo repo.Inventory
 	user repo.User
+	deal repo.Deal
 }
 
 func (i *inventory) GetByID(id int) (*models.InventoryItem, error) {
@@ -64,6 +66,26 @@ func (i *inventory) Withdraw(ownerID, securityID, amount uint) (*models.Inventor
 
 	if err := i.repo.Save(inventory); err != nil {
 		return nil, err
+	}
+
+	hasDeal, err := i.deal.GetByUserIDAndSecurityID(int(ownerID), int(securityID))
+
+	if hasDeal.Amount <= inventory.Amount {
+		return inventory, nil
+	}
+
+	if err != nil {
+		return inventory, nil
+	}
+
+	if amount >= hasDeal.Amount {
+		err := i.deal.Delete(int(hasDeal.ID))
+		return inventory, err
+	}
+
+	hasDeal.Amount -= amount
+	if _, err := i.deal.Patch(hasDeal); err != nil {
+		return inventory, err
 	}
 
 	return inventory, nil

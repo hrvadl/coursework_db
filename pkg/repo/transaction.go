@@ -63,6 +63,7 @@ func (t *transaction) Add(new *models.Transaction) (*models.Transaction, error) 
 		}
 
 		if boughtItem == nil {
+			boughtItem = &models.InventoryItem{}
 			boughtItem.SecurityID = new.Subject.SecurityID
 			boughtItem.OwnerID = new.BuyerID
 		}
@@ -84,6 +85,10 @@ func (t *transaction) Add(new *models.Transaction) (*models.Transaction, error) 
 		new.Seller.Balance += int(dealMoney)
 		if err := tx.Save(new.Seller).Error; err != nil {
 			return err
+		}
+
+		if new.Amount > new.Subject.Amount {
+			return errors.New("trying to buy to much")
 		}
 
 		new.Subject.Amount -= new.Amount

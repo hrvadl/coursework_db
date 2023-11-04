@@ -9,6 +9,7 @@ type Deal interface {
 	GetAllByID(id int) (*models.Deal, error)
 	GetByID(id int) (*models.Deal, error)
 	Get() ([]models.Deal, error)
+	GetByUserIDAndSecurityID(userID, securityID int) (*models.Deal, error)
 	Create(deal *models.Deal) (*models.Deal, error)
 	Patch(deal *models.Deal) (*models.Deal, error)
 	Delete(id int) error
@@ -63,6 +64,19 @@ func (d *deal) Get() ([]models.Deal, error) {
 	}
 
 	return deals, nil
+}
+
+func (d *deal) GetByUserIDAndSecurityID(userID, securityID int) (*models.Deal, error) {
+	var deal models.Deal
+	res := d.db.Model(&models.Deal{}).
+		Where(&models.Deal{
+			Active:     true,
+			SecurityID: uint(securityID),
+			OwnerID:    uint(userID),
+		}).
+		First(&deal)
+
+	return &deal, res.Error
 }
 
 func (d *deal) Patch(deal *models.Deal) (*models.Deal, error) {

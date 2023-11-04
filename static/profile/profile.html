@@ -23,32 +23,7 @@
       <span></span>
       {{ template "inventory" . }}
       <span></span>
-      {{ if eq .User.Role "stock" }}
-      <section class="mb-10">
-        <h2 class="text-2xl font-semibold mb-4">Deals</h2>
-        <p class="block mb-2">Total open deals: {{ len .User.Deals }}</p>
-        <ul class="flex flex-col gap-2">
-          {{ range .User.Deals }}
-          <li
-            class="w-full p-2 hover:bg-gray-200 duration-150 cursor-pointer w-full"
-          >
-            <a href="/deals/{{ .ID }}" class="flex justify-between gap-2">
-              <p class="flex-grow-0 flex-shrink-0 w-36 truncate text-base">
-                Security {{ .Security.Name }}
-              </p>
-              <p class="flex-grow-0 flex-shrink-0 truncate w-36 text-base">
-                {{ if .Sell }} Sell price: {{ .Price }}$ {{ else }} Buy price {{
-                .Price }}$ {{ end }}
-              </p>
-              <p class="flex-grow-0 flex-shrink-0 truncate w-28 text-base">
-                Amount: {{ .Amount }}
-              </p>
-            </a>
-          </li>
-          {{ end }}
-        </ul>
-      </section>
-      {{ end }}
+      {{ if eq .User.Role "stock" }} {{ template "deals-list" . }} {{ end }}
       <section class="mb-10">
         <h2 class="text-2xl font-semibold mb-4">Recent transactions</h2>
         <p class="block mb-2">Total transactions: {{ len .Transactions }}</p>

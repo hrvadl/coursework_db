@@ -50,6 +50,7 @@ func (d *Deal) ServeDealsPage(w http.ResponseWriter, r *http.Request) {
 		role = ctx.Role
 	}
 
+	w.WriteHeader(http.StatusOK)
 	d.t.Execute(w, "deals.html", templates.DealsArgs{
 		Deals:      deals,
 		Role:       role,
@@ -96,6 +97,7 @@ func (d *Deal) ServeDealPage(w http.ResponseWriter, r *http.Request) {
 		amountHas = int(has.Amount)
 	}
 
+	w.WriteHeader(http.StatusOK)
 	d.t.Execute(w, "deal.html", templates.DealArgs{
 		Deal:      deal,
 		Logined:   true,

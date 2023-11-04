@@ -67,6 +67,7 @@ func (p *Profile) ServeProfilePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
 	p.t.Execute(w, "profile.html", templates.ProfileArgs{
 		User:         profile,
 		Logined:      true,
@@ -119,6 +120,23 @@ func (p *Profile) HandleGetGeneralInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.t.Execute(w, "general-info", templates.GeneralProfileInfoArgs{
+		User: profile,
+	})
+}
+
+func (p *Profile) HandleGetUserDeals(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.Must(
+		middleware.GetUserCtx(r.Context()),
+	)
+
+	profile, err := p.us.GetByID(int(userCtx.ID))
+
+	if err != nil {
+		p.t.Execute(w, "toast", templates.ToastArgs{Error: "User not found"})
+		return
+	}
+
+	p.t.Execute(w, "deals-list", templates.GeneralProfileInfoArgs{
 		User: profile,
 	})
 }
