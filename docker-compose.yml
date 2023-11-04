@@ -20,7 +20,7 @@ services:
     env_file:
       - .prod.env
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-dev-data:/var/lib/mysql
 
 networks:
   stocknet:
@@ -28,4 +28,4 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data:
+  mysql-dev-data:
