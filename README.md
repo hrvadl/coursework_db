@@ -1,6 +1,7 @@
 # My coursework project. This was intended to be a financial application
 
 Tech stack:
+
 - Go
 - Chi router
 - Gorm
@@ -10,7 +11,27 @@ Tech stack:
 
 ## How to run?
 
-In progress...
+### In Docker
+
+1. Create .prod.env file in the root of the project
+2. Fill the .prod.env file with needed variables
+3. Make sure you have Docker & Docker compose installed
+4. Run `make up`
+
+### Partially Locally
+
+1. Create .env file in the root of the project
+2. Fill the .env file with needed variables
+3. Make sure you have Docker & Docker compose installed
+4. Run `make dev` to run the DB in the Docker
+5. Run `make run` to run the application locally
+
+### Fully locally
+
+1. Install MySQL locally
+2. Create needed DB, user etc.
+3. Fill the .env file with needed variables
+4. Run `make run` to run the application
 
 ## Screenshots
 
