@@ -10,7 +10,7 @@ type User struct {
 	LastName  string          `gorm:"not null"`
 	Role      string          `gorm:"not null"`
 	FirstName string          `gorm:"not null"`
-	Email     string          `gorm:"not null,unique"`
+	Email     string          `gorm:"index:idx_email,unique;not null"`
 	Password  string          `gorm:"not null"`
 	Balance   int             `gorm:"not null"`
 	Deals     []Deal          `gorm:"foreignKey:OwnerID"`
